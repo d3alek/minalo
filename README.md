@@ -14,7 +14,7 @@ git commit -am "Минута $(cat време)"
 ```
 git fetch minalo2 $(cat време)
 DIFF=$(git diff --exit-code minalo2/$(cat време) време)
-[ $DIFF -eq 0 ] && echo 'Accept' || echo 'Reject'
+$DIFF && echo 'Accept' || echo 'Reject'
 ```
 
 
