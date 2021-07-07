@@ -14,7 +14,7 @@ os.environ['GNUPGHOME'] = os.getcwd() + '/тайник'
 ГЛАСУВАНЕ = 50
 ПРИЕМАНЕ = 60
 
-sh2 = sh(_err_to_out=True)
+sh2 = sh(_err_to_out=True, _truncate_exc=False)
 git = sh2.git
 
 #def почисти():
