@@ -85,6 +85,7 @@ def изпращай_промени(водачи, клон_шаблон):
             print(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
 
             print(git.push(водач['номер']))
+            print(git.checkout('main'))
 
     while сега().second < СЛУШАНЕ:
         for водач in водачи:
