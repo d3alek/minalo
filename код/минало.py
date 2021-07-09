@@ -136,7 +136,8 @@ def гласувай(водачи, кандидат_клон_шаблон, aз):
             print(git.commit('--gpg-sign='+аз, '-m', 'Глас от ' + аз))
             print(git.push(remote, 'HEAD:'+кандидат_клон_шаблон))
             гласувах = True
-        except sh.ErrorReturnCode_1:
+        except sh.ErrorReturnCode_1 as e:
+            print(e)
             print(git.reset('--hard', 'HEAD~1'))
 
     time.sleep(max(0, ГЛАСУВАНЕ - сега().second))
