@@ -125,14 +125,19 @@ def гласувай(водачи, кандидат_клон_шаблон, aз):
 
     print(сега(), 'Гласувам за', best)
     remote = best.split('/')[2]
+    гласувах = False
     print(git.checkout('-B', кандидат_клон_шаблон+'+глас', '--track', best))
+    while not гласувах:
+        try:
+            with open('гласове', 'a+') as f:
+                f.write(аз+'\n')
 
-    with open('гласове', 'a+') as f:
-        f.write(аз+'\n')
-
-    print(git.add('гласове'))
-    print(git.commit('--gpg-sign='+аз, '-m', 'Глас от ' + аз))
-    print(git.push(remote, 'HEAD:'+кандидат_клон_шаблон))
+            print(git.add('гласове'))
+            print(git.commit('--gpg-sign='+аз, '-m', 'Глас от ' + аз))
+            print(git.push(remote, 'HEAD:'+кандидат_клон_шаблон))
+            гласувах = True
+        except sh.ErrorReturnCode_1:
+            print(git.reset('--hard', 'HEAD~1'))
 
     time.sleep(max(0, ГЛАСУВАНЕ - сега().second))
 
