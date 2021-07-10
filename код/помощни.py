@@ -2,7 +2,7 @@
 
 import datetime
 import sh
-from sh import gpg2, head, grep
+from sh import gpg2
 
 СЛУШАНЕ = 30
 
@@ -44,4 +44,7 @@ def време_клон(кандидат=False, време=None):
   return време
 
 def вземи_аз():
-    return head(grep(gpg2('--with-colons', '-K'), 'fpr'), '-n1').split(':')[9]
+    keys = gpg2('--with-colons', '-K')
+    for line in keys:
+        if 'fpr' in line:
+            return line.split(':')[9]
