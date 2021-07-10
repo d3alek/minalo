@@ -265,6 +265,10 @@ def минута():
 
             приеми_минута(водачи, кандидат_клон_шаблон)
 
+            if stored_exception:
+                break
+
+            time.sleep(max(0, ПРИЕМАНЕ - сега().second))
 
             log.info('Изтривам излишни клони')
             if съм_водач:
@@ -283,11 +287,6 @@ def минута():
                 if клон != 'refs/heads/main':
                     клон = клон.split('refs/heads/')[1]
                     log.debug(git.branch('-D', клон))
-
-            if stored_exception:
-                break
-
-            time.sleep(max(0, ПРИЕМАНЕ - сега().second))
         except KeyboardInterrupt:
             if stored_exception:
                 raise 
