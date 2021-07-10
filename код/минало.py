@@ -4,7 +4,19 @@ import datetime
 import time
 import sh
 import os
-from помощни import време_клон, СЛУШАНЕ, сега, вземи_водачи, изчисли_водачи, вземи_съучастници, вземи_аз
+from помощни import време_клон, СЛУШАНЕ, сега, вземи_водачи, изчисли_водачи, вземи_съучастници, вземи_аз, CustomFormatter
+
+import colorlog
+import logging
+log = colorlog.getLogger('минало')
+log.setLevel(logging.DEBUG)
+
+ch = colorlog.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(colorlog.ColoredFormatter(
+	'%(log_color)s%(levelname)s:%(name)s:%(message)s'))
+
+log.addHandler(ch)
 
 os.environ['GNUPGHOME'] = os.getcwd() + '/тайник'
 аз = вземи_аз()
@@ -63,11 +75,11 @@ def вземи_клони(шаблон='', local=True):
         return []
 
 def изпращай_промени(водачи, клон_шаблон):
-    print(сега(), 'Слушам и изпращам промени към водачите')
+    log.info('Слушам и изпращам промени към водачите')
 
     for водач in водачи:
-        print(git.fetch(водач['номер'], 'main'))
-        print(git.checkout('-B', водач['номер']+'-main', '--track', водач['номер']+'/main'))
+        log.debug(git.fetch(водач['номер'], 'main'))
+        log.debug(git.checkout('-B', водач['номер']+'-main', '--track', водач['номер']+'/main'))
         съучастници = вземи_съучастници()
         намерих_себе_си = False
         for съучастник in съучастници:
@@ -75,40 +87,41 @@ def изпращай_промени(водачи, клон_шаблон):
                 намерих_себе_си = True
 
         if not намерих_себе_си:
-            print('Не намерих себе си в съучастниците на водач', водач)
-            print(git.checkout('-B', клон_шаблон+'-'+аз))
+            log.info('Не намерих себе си в съучастниците на водач', водач)
+            log.debug(git.checkout('-B', клон_шаблон+'-'+аз))
             with open('съучастници', 'a+') as f:
                 водач_адрес = os.getcwd() + '/водач' #TODO направи ако не съществува чрез git clone .git водач --bare
 
                 f.write('%s %s\n' % (аз, водач_адрес))
-            print(git.add('съучастници'))
-            print(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
+            log.debug(git.add('съучастници'))
+            log.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
 
-            print(git.push(водач['номер']))
-            print(git.checkout('main'))
+            log.debug(git.push(водач['номер']))
+
+        log.debug(git.checkout('main'))
 
     while сега().second < СЛУШАНЕ:
         for водач in водачи:
-            print(git.fetch(водач['номер']))
+            log.debug(git.fetch(водач['номер']))
         клони = вземи_клони(клон_шаблон)
 
         for клон in клони:
             for водач in водачи:
-                print(git.push(водач['номер'], клон))
+                log.debug(git.push(водач['номер'], клон))
 
         time.sleep(1)
 
 def сглоби_минута(кандидат_клон_шаблон, аз):
-    print(сега(), 'Сглобявам минута')
+    log.info('Сглобявам минута')
 
     време = сега().isoformat(timespec='minutes')
     #TODO вярваме на pre-receive hook че всички получени от remote аз-а ще са валидни
     клони = list(filter(lambda к: аз in к, вземи_клони(local=False)))
 
-    print(git.checkout('-B', кандидат_клон_шаблон))
+    log.debug(git.checkout('-B', кандидат_клон_шаблон))
 
     for клон in клони:
-        print(git.merge(клон))
+        log.debug(git.merge(клон))
 
     with open('време', 'w') as f:
         f.write(време)
@@ -116,35 +129,28 @@ def сглоби_минута(кандидат_клон_шаблон, аз):
     with open('гласове', 'w') as f:
         f.write('')
 
-    #with open('водачи', 'w') as f:
-    #    f.write('\n'.join(изчисли_водачи()))
+    with open('водачи', 'w') as f:
+        f.write('\n'.join(map(lambda d: "%s %s" % (d['номер'], d['адрес']), изчисли_водачи())))
 
-    print(git.add('време'))
-    print(git.add('гласове'))
-    #git.add('водачи')
-    # добави към съучастници нови участници в предишния блок
-#    преди_минута = сега() - datetime.timedelta(minutes=1).isoformat()
-#    last_minute_commits = git('rev-list','HEAD','--since=' + преди_минута, 'pretty="format:%GP"')
-#    for line in last_minute_commits.strip().split('\n'):
-#        if 'commit' in line:
-#            continue
-#
+    log.debug(git.add('време'))
+    log.debug(git.add('гласове'))
+    log.debug(git.add('водачи'))
     
-    print(git.commit('--gpg-sign='+аз, '-m', 'време ' + време))
+    log.debug(git.commit('--gpg-sign='+аз, '-m', 'време ' + време))
 
-    print(git.push(аз))
-    print(git.checkout('main'))
+    log.debug(git.push(аз))
+    log.debug(git.checkout('main'))
 
     time.sleep(max(0, СГЛОБЯВАНЕ - сега().second))
 
 def гласувай(водачи, кандидат_клон_шаблон, aз):
-    print(сега(), 'Гласувам')
+    log.info('Гласувам')
 
     best = None
     best_count = None
 
     for водач in водачи:
-        print(git.fetch(водач['номер']))
+        log.debug(git.fetch(водач['номер']))
 
     клони = вземи_клони(шаблон=кандидат_клон_шаблон, local=False)
 
@@ -157,34 +163,34 @@ def гласувай(водачи, кандидат_клон_шаблон, aз):
     if not best:
         raise RuntimeError('!!! Не намерих най-добър клон', клони)
 
-    print(сега(), 'Гласувам за', best)
+    log.info('Гласувам за', best)
     remote = best.split('/')[2]
     гласувах = False
-    print(git.checkout('-B', кандидат_клон_шаблон+'+глас', '--track', best))
+    log.debug(git.checkout('-B', кандидат_клон_шаблон+'+глас', '--track', best))
     while not гласувах:
         try:
             with open('гласове', 'a+') as f:
                 f.write(аз+'\n')
 
-            print(git.add('гласове'))
-            print(git.commit('--gpg-sign='+аз, '-m', 'Глас от ' + аз))
-            print(git.push(remote, 'HEAD:'+кандидат_клон_шаблон))
+            log.debug(git.add('гласове'))
+            log.debug(git.commit('--gpg-sign='+аз, '-m', 'Глас от ' + аз))
+            log.debug(git.push(remote, 'HEAD:'+кандидат_клон_шаблон))
             гласувах = True
         except sh.ErrorReturnCode_1 as e:
-            print(e)
-            print(git.reset('--hard', 'HEAD~1'))
-            print(git.pull())
+            log.error(e)
+            log.debug(git.reset('--hard', 'HEAD~1'))
+            log.debug(git.pull())
 
     time.sleep(max(0, ГЛАСУВАНЕ - сега().second))
 
 def приеми_минута(водачи, кандидат_клон_шаблон):
-    print(сега(), 'Приемам минута')
+    log.info('Приемам минута')
 
     best = None
     best_count = None
 
     for водач in водачи:
-        print(git.fetch(водач['номер']))
+        log.debug(git.fetch(водач['номер']))
 
     клони = вземи_клони(кандидат_клон_шаблон, local=False)
 
@@ -194,9 +200,9 @@ def приеми_минута(водачи, кандидат_клон_шабло
             best = клон
             best_count = count
 
-    print(сега(), 'Приемам', best)
-    print(git.checkout('main'))
-    print(git.merge('--ff-only', best))
+    log.info('Приемам', best)
+    log.debug(git.checkout('main'))
+    log.debug(git.merge('--ff-only', best))
 
 # План
 ## 1. Всички промени се пращат към водачите до 30тата секунда от минутата. Водачите имат отговорност да синхронизират промените по между си.
@@ -205,75 +211,88 @@ def приеми_минута(водачи, кандидат_клон_шабло
 ## 4. Когато има много неразбирателство, увеличи броя водачи като добавиш себе си към водачите
 ## 5. Всички приемат минутата на водача с най-много гласове. Тоест, комити.
 def минута():
+    stored_exception = None
+
     try:
-        print(git.pull(аз, 'main'))
-        print(git.push(аз, 'main'))
+        log.debug(git.pull(аз, 'main'))
+        log.debug(git.push(аз, 'main'))
     except:
         pass
+
     while True:
-        if сега().second > СЛУШАНЕ:
-            време = сега() - datetime.timedelta(minutes=1)
-        else:
-            време = сега()
-
-        клон_шаблон = време_клон(време=време)
-        кандидат_клон_шаблон = време_клон(кандидат=True, време=време)
-
-        водачи = вземи_водачи()
-        съм_водач = False
-        for водач in водачи:
-            съм_водач = съм_водач or водач['номер'] == аз
-
-        if съм_водач:
-            print('Водач съм')
-        else:
-            print('Не съм водач')
-        съучастници = вземи_съучастници()
-
-        remotes = list(map(str.strip, git.remote().split('\n')))
-        for съучастник in съучастници:
-            if съучастник['номер'] not in remotes:
-                git.remote.add(съучастник['номер'], съучастник['адрес'])
+        try:
+            if сега().second > СЛУШАНЕ:
+                време = сега() - datetime.timedelta(minutes=1)
             else:
-                #TODO update url
-                continue
+                време = сега()
 
-        git.checkout('main')
-        #if сега().second > СЛУШАНЕ:
-        #    print(сега(), "Изчаквам новата минута")
-        #    time.sleep(ПРИЕМАНЕ - сега().second - сега().microsecond/1000000) # TODO това работи добре
-        #    continue
+            клон_шаблон = време_клон(време=време)
+            кандидат_клон_шаблон = време_клон(кандидат=True, време=време)
 
-        изпращай_промени(водачи, клон_шаблон)
+            водачи = вземи_водачи()
+            съм_водач = False
+            for водач in водачи:
+                съм_водач = съм_водач or водач['номер'] == аз
 
-        if съм_водач:
-            сглоби_минута(кандидат_клон_шаблон, аз)
-        else:
-            time.sleep(max(0, СГЛОБЯВАНЕ - сега().second))
+            if съм_водач:
+                log.info('Водач съм')
+            else:
+                log.info('Не съм водач')
+            съучастници = вземи_съучастници()
 
-        гласувай(водачи, кандидат_клон_шаблон, аз)
+            remotes = list(map(str.strip, git.remote().split('\n')))
+            for съучастник in съучастници:
+                if съучастник['номер'] not in remotes:
+                    git.remote.add(съучастник['номер'], съучастник['адрес'])
+                else:
+                    #TODO update url
+                    continue
 
-        приеми_минута(водачи, кандидат_клон_шаблон)
+            git.checkout('main')
+            #if сега().second > СЛУШАНЕ:
+            #    print(сега(), "Изчаквам новата минута")
+            #    time.sleep(ПРИЕМАНЕ - сега().second - сега().microsecond/1000000) # TODO това работи добре
+            #    continue
+
+            изпращай_промени(водачи, клон_шаблон)
+
+            if съм_водач:
+                сглоби_минута(кандидат_клон_шаблон, аз)
+            else:
+                time.sleep(max(0, СГЛОБЯВАНЕ - сега().second))
+
+            гласувай(водачи, кандидат_клон_шаблон, аз)
+
+            приеми_минута(водачи, кандидат_клон_шаблон)
 
 
-        print('Изтривам излишни клони')
-        if съм_водач:
-            клони = вземи_клони(local=False)
-            print(клони)
-            git.push(аз,'main')
+            log.info('Изтривам излишни клони')
+            if съм_водач:
+                клони = вземи_клони(local=False)
+                git.push(аз,'main')
+                for клон in клони:
+                    if аз in клон and клон != 'refs/remotes/%s/main' % аз:
+
+                        клон = клон.split('refs/remotes/%s/' % аз)[1]
+                        log.debug(git.push(аз, '--delete', клон))
+
+            клони = вземи_клони(local=True)
             for клон in клони:
-                if аз in клон and клон != 'refs/remotes/%s/main' % аз:
+                if клон != 'refs/heads/main':
+                    клон = клон.split('refs/heads/')[1]
+                    log.debug(git.branch('-D', клон))
 
-                    клон = клон.split('refs/remotes/%s/' % аз)[1]
-                    print(git.push(аз, '--delete', клон))
+            if stored_exception:
+                break
 
-        клони = вземи_клони(local=True)
-        for клон in клони:
-            if клон != 'refs/heads/main':
-                клон = клон.split('refs/heads/')[1]
-                print(git.branch('-D', клон))
+            time.sleep(max(0, ПРИЕМАНЕ - сега().second))
+        except KeyboardInterrupt:
+            if stored_exception:
+                raise 
+            import sys
+            stored_exception = sys.exc_info()
+            log.warn('Ще изляза в края на тази минута. Прекъсни отново за да изляза веднага')
 
-        time.sleep(max(0, ПРИЕМАНЕ - сега().second))
 
 # Промени в кода се приемат само с няколко (3) подписа на разработчици (такива които са правили вече промени по кода).
 

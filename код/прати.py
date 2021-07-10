@@ -4,7 +4,7 @@ import sh
 from sh import rm
 import os
 import yaml
-from помощни import намери_водачи, време_клон, сега, вземи_аз, git
+from помощни import намери_водачи, време_клон, сега, вземи_аз, git, CustomFormatter
 
 import logging
 log = logging.getLogger('прати')
@@ -12,6 +12,7 @@ log.setLevel(logging.DEBUG)
 
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
+ch.setFormatter(CustomFormatter())
 
 log.addHandler(ch)
 
