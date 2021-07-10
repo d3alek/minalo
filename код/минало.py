@@ -4,7 +4,10 @@ import datetime
 import time
 import sh
 import os
-from помощни import време_клон, СЛУШАНЕ, сега, вземи_водачи, изчисли_водачи, вземи_съучастници, вземи_аз, CustomFormatter
+from помощни import време_клон, СЛУШАНЕ, сега, вземи_водачи, изчисли_водачи, вземи_съучастници, вземи_аз
+
+os.environ['GNUPGHOME'] = os.getcwd() + '/тайник'
+аз = вземи_аз()
 
 import colorlog
 import logging
@@ -14,12 +17,9 @@ log.setLevel(logging.DEBUG)
 ch = colorlog.StreamHandler()
 ch.setLevel(logging.DEBUG)
 ch.setFormatter(colorlog.ColoredFormatter(
-	'%(log_color)s%(levelname)s:%(name)s:%(message)s'))
+    '%(log_color)s%(levelname)s:'+аз[:4]+':%(message)s'))
 
 log.addHandler(ch)
-
-os.environ['GNUPGHOME'] = os.getcwd() + '/тайник'
-аз = вземи_аз()
 
 # СЛУШАНЕ идва от помощни.py
 СГЛОБЯВАНЕ = 35
@@ -163,7 +163,7 @@ def гласувай(водачи, кандидат_клон_шаблон, aз):
     if not best:
         raise RuntimeError('!!! Не намерих най-добър клон', клони)
 
-    log.info('Гласувам за', best)
+    log.info('Гласувам за ' + best)
     remote = best.split('/')[2]
     гласувах = False
     log.debug(git.checkout('-B', кандидат_клон_шаблон+'+глас', '--track', best))
@@ -200,7 +200,7 @@ def приеми_минута(водачи, кандидат_клон_шабло
             best = клон
             best_count = count
 
-    log.info('Приемам', best)
+    log.info('Приемам ' + best)
     log.debug(git.checkout('main'))
     log.debug(git.merge('--ff-only', best))
 
@@ -291,7 +291,7 @@ def минута():
                 raise 
             import sys
             stored_exception = sys.exc_info()
-            log.warn('Ще изляза в края на тази минута. Прекъсни отново за да изляза веднага')
+            log.warning('Ще изляза в края на тази минута. Прекъсни отново за да изляза веднага')
 
 
 # Промени в кода се приемат само с няколко (3) подписа на разработчици (такива които са правили вече промени по кода).
