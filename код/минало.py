@@ -94,31 +94,30 @@ def изпращай_промени(водачи, клон_шаблон, usernam
         log.debug(git.add('authorized_keys'))
         log.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към authorized_keys'))
 
-        for водач in водачи:
-            log.debug(git.push(водач['номер']))
-        log.debug(git.checkout('main'))
-
     for водач in водачи:
         log.debug(git.fetch(водач['номер'], 'main'))
-        log.debug(git.checkout('-B', водач['номер']+'-main', '--track', водач['номер']+'/main'))
-        съучастници = вземи_съучастници()
-        намерих_себе_си = False
-        for съучастник in съучастници:
-            if съучастник['номер'] == аз:
-                намерих_себе_си = True
-
         if not намерих_себе_си:
-            log.info('Не намерих себе си в съучастниците на водач', водач)
-            log.debug(git.checkout('-B', клон_шаблон+'-'+аз))
-            with open('съучастници', 'a+') as f:
-                водач_папка = os.getcwd() + '/водач' #TODO направи ако не съществува чрез git clone .git водач --bare
-                водач_адрес = '%s@%s:%s' % (username, host, водач_папка)
-
-                f.write('%s %s\n' % (аз, водач_адрес))
-            log.debug(git.add('съучастници'))
-            log.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
-
             log.debug(git.push(водач['номер']))
+        else:
+            log.debug(git.checkout('-B', водач['номер']+'-main', '--track', водач['номер']+'/main'))
+            съучастници = вземи_съучастници()
+            намерих_себе_си = False
+            for съучастник in съучастници:
+                if съучастник['номер'] == аз:
+                    намерих_себе_си = True
+
+            if not намерих_себе_си:
+                log.info('Не намерих себе си в съучастниците на водач', водач)
+                log.debug(git.checkout('-B', клон_шаблон+'-'+аз))
+                with open('съучастници', 'a+') as f:
+                    водач_папка = os.getcwd() + '/водач' #TODO направи ако не съществува чрез git clone .git водач --bare
+                    водач_адрес = '%s@%s:%s' % (username, host, водач_папка)
+
+                    f.write('%s %s\n' % (аз, водач_адрес))
+                log.debug(git.add('съучастници'))
+                log.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
+
+                log.debug(git.push(водач['номер']))
 
         log.debug(git.checkout('main'))
 
@@ -237,7 +236,7 @@ def минута(username, host):
 
     try:
         log.debug(git.checkout('main'))
-        log.debug(git.pull('origin'))
+        log.debug(git.pull('--ff-only', 'origin'))
         log.debug(git.push(аз, 'main', '--force'))
     except:
         pass
