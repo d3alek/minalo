@@ -94,7 +94,8 @@ def изпращай_промени(водачи, клон_шаблон, usernam
         log.debug(git.add('authorized_keys'))
         log.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към authorized_keys'))
 
-        log.debug(git.push(водач['номер']))
+        for водач in водачи:
+            log.debug(git.push(водач['номер']))
         log.debug(git.checkout('main'))
 
     for водач in водачи:

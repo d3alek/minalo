@@ -22,4 +22,10 @@ $DIFF && echo 'Accept' || echo 'Reject'
 ```
 git clone https://github.com/d3alek/minalo.git
 pkg install gnupg
+cd minalo
+export GNUPGHOME=$(pwd)/тайник
+gpg --quick-generate-key
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name"
 ```
+
