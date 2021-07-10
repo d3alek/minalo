@@ -131,7 +131,7 @@ def сглоби_минута(кандидат_клон_шаблон, аз):
         f.write('')
 
     with open('водачи', 'w') as f:
-        f.write('\n'.join(map(lambda d: "%s %s" % (d['номер'], d['адрес']), изчисли_водачи())))
+        f.write('\n'.join(map(lambda d: "%s" % (d['номер']), изчисли_водачи())))
 
     log.debug(git.add('време'))
     log.debug(git.add('гласове'))
