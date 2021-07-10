@@ -216,6 +216,7 @@ def минута(username, host):
 
     try:
         log.debug(git.checkout('main'))
+        log.debug(git.pull('origin'))
         log.debug(git.push(аз, 'main', '--force'))
     except:
         pass
