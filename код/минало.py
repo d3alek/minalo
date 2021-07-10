@@ -214,8 +214,8 @@ def минута():
     stored_exception = None
 
     try:
-        log.debug(git.pull(аз, 'main'))
-        log.debug(git.push(аз, 'main'))
+        log.debug(git.checkout('main'))
+        log.debug(git.push(аз, 'main', '--force'))
     except:
         pass
 
