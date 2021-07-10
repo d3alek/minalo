@@ -74,7 +74,7 @@ def вземи_клони(шаблон='', local=True):
     except:
         return []
 
-def изпращай_промени(водачи, клон_шаблон, username, host):
+def изпращай_промени(водачи, клон_шаблон, username, host, port):
     log.info('Слушам и изпращам промени към водачите')
 
     намерих_себе_си = False
@@ -111,7 +111,7 @@ def изпращай_промени(водачи, клон_шаблон, usernam
                 log.debug(git.checkout('-B', клон_шаблон+'-'+аз))
                 with open('съучастници', 'a+') as f:
                     водач_папка = os.getcwd() + '/водач' #TODO направи ако не съществува чрез git clone .git водач --bare
-                    водач_адрес = '%s@%s:%s' % (username, host, водач_папка)
+                    водач_адрес = 'ssh://%s@%s:%s%s' % (username, host, port, водач_папка)
 
                     f.write('%s %s\n' % (аз, водач_адрес))
                 log.debug(git.add('съучастници'))
@@ -234,7 +234,7 @@ def приеми_минута(водачи, кандидат_клон_шабло
 ## 3. Всички кандидатстват за най-добрата минута, която водачите са предложили. Тоест, пращат комит.
 ## 4. Когато има много неразбирателство, увеличи броя водачи като добавиш себе си към водачите
 ## 5. Всички приемат минутата на водача с най-много гласове. Тоест, комити.
-def минута(username, host):
+def минута(username, host, port):
     stored_exception = None
 
     try:
@@ -279,7 +279,7 @@ def минута(username, host):
             #    time.sleep(ПРИЕМАНЕ - сега().second - сега().microsecond/1000000) # TODO това работи добре
             #    continue
 
-            изпращай_промени(водачи, клон_шаблон, username, host)
+            изпращай_промени(водачи, клон_шаблон, username, host, port)
 
             if съм_водач:
                 сглоби_минута(кандидат_клон_шаблон, аз)
@@ -327,7 +327,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('username')
     parser.add_argument('hostname')
+    parser.add_argument('port')
 
     args = parser.parse_args()
  
-    минута(args.username, args.hostname)
+    минута(args.username, args.hostname, args.port)
