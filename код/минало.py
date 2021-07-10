@@ -1,4 +1,4 @@
-#!venv/bin/python3
+#!../venv/bin/python3
 
 import datetime
 import time
@@ -76,6 +76,26 @@ def вземи_клони(шаблон='', local=True):
 
 def изпращай_промени(водачи, клон_шаблон, username, host):
     log.info('Слушам и изпращам промени към водачите')
+
+    намерих_себе_си = False
+    with open(os.environ['HOME'] + '/.ssh/id_rsa.pub') as f:
+        my_key = f.read()
+    with open('authorized_keys') as f:
+        for line in f:
+            if line == my_key:
+                намерих_себе_си = True
+    if not намерих_себе_си:
+        log.info('Не намерих себе си в authorized_keys')
+
+        log.debug(git.checkout('-B', клон_шаблон+'-'+аз))
+
+        with open('authorized_keys', 'a+') as f:
+            f.write(my_key)
+        log.debug(git.add('authorized_keys'))
+        log.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към authorized_keys'))
+
+        log.debug(git.push(водач['номер']))
+        log.debug(git.checkout('main'))
 
     for водач in водачи:
         log.debug(git.fetch(водач['номер'], 'main'))

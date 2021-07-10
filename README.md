@@ -17,4 +17,9 @@ DIFF=$(git diff --exit-code minalo2/$(cat време) време)
 $DIFF && echo 'Accept' || echo 'Reject'
 ```
 
+## Настройка на нов телефон
 
+```
+git clone https://github.com/d3alek/minalo.git
+pkg install gnupg
+```
