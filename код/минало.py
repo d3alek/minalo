@@ -117,7 +117,10 @@ def изпращай_промени(водачи, клон_шаблон, usernam
                 log.debug(git.add('съучастници'))
                 log.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
 
-                log.debug(git.push(водач['номер']))
+                try:
+                    log.debug(git.push(водач['номер']))
+                except sh.ErrorReturnCode_1 as e:
+                    log.exception(e)
 
         log.debug(git.checkout('main'))
 
