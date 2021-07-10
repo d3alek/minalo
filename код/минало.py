@@ -269,6 +269,7 @@ def минута():
             log.info('Изтривам излишни клони')
             if съм_водач:
                 клони = вземи_клони(local=False)
+                log.debug(клони)
                 git.push(аз,'main')
                 for клон in клони:
                     if аз in клон and клон != 'refs/remotes/%s/main' % аз:
