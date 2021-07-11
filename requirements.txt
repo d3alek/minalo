@@ -1,3 +1,4 @@
 sh
 pyyaml
 colorlog
+paramiko

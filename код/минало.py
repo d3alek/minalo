@@ -428,5 +428,10 @@ if __name__ == '__main__':
         reverse_forward_tunnel(
             remote_port, 'localhost', args.ssh_port, client.get_transport()
         )
+        ssh_host = server
+        ssh_port = remote_port
+    else:
+        ssh_host = args.ssh_host
+        ssh_port = args.ssh_port
 
-    минута(args.ssh_user, server, remote_port)
+    минута(args.ssh_user, ssh_host, ssh_port)
