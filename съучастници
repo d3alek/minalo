@@ -1,4 +1,5 @@
-292413F64AD2106902064554EC8111CD8E195F36 alek@192.168.43.87:/home/alek/проекти/нова-валута/минало/водач
-914281D1C4866156055387BFDAD787F383C49669 alek@192.168.43.87:/home/alek/проекти/нова-валута/минало2/водач
-F8C03F3CF86AFB5FFB3EBE179BADCC93DEE81259 alek@192.168.43.87:/home/alek/проекти/нова-валута/минало3/водач
-CC39ED5130E145D465C5618E5324DB3C87D73B0F ssh://user@192.168.43.1:8022/data/data/com.termux/files/home/minalo/водач
+292413F64AD2106902064554EC8111CD8E195F36 ssh://alek@%(hostname)s:/home/alek/проекти/нова-валута/минало/водач
+#914281D1C4866156055387BFDAD787F383C49669 ssh://alek@%(hostname)s:/home/alek/проекти/нова-валута/минало2/водач
+#F8C03F3CF86AFB5FFB3EBE179BADCC93DEE81259 ssh://alek@%(hostname)s:/home/alek/проекти/нова-валута/минало3/водач
+#CC39ED5130E145D465C5618E5324DB3C87D73B0F ssh://user@%(hostname)s:8022/data/data/com.termux/files/home/minalo/водач
+CD68C8EF4E9F6FDBA8C4E4623F945F14B6F55B47 ssh://ubuntu@3.122.41.243:/home/ubuntu/minalo/водач.git

@@ -323,13 +323,110 @@ def минута(username, host, port):
 
 # Промени в кода се приемат само с няколко (3) подписа на разработчици (такива които са правили вече промени по кода).
 
+def handler(chan, host, port):
+    import socket
+    import select
+    sock = socket.socket()
+    try:
+        sock.connect((host, port))
+    except Exception as e:
+        log.debug("Forwarding request to %s:%d failed: %r" % (host, port, e))
+        return
+
+    log.debug(
+        "Connected!  Tunnel open %r -> %r -> %r"
+        % (chan.origin_addr, chan.getpeername(), (host, port))
+    )
+    while True:
+        r, w, x = select.select([sock, chan], [], [])
+        if sock in r:
+            data = sock.recv(1024)
+            if len(data) == 0:
+                break
+            chan.send(data)
+        if chan in r:
+            data = chan.recv(1024)
+            if len(data) == 0:
+                break
+            sock.send(data)
+    chan.close()
+    sock.close()
+    log.debug("Tunnel closed from %r" % (chan.origin_addr,))
+
+def reverse_forward_loop(transport):
+    while True:
+        chan = transport.accept(1000)
+        if chan is None:
+            continue
+        thr = threading.Thread(
+            target=handler, args=(chan, remote_host, remote_port)
+        )
+        thr.daemon = True
+        thr.start()
+
+def reverse_forward_tunnel(server_port, remote_host, remote_port, transport):
+    import threading
+    transport.request_port_forward("", server_port)
+    thr = threading.Thread(target=reverse_forward_loop, args=(transport,))
+    thr.daemon = True
+    thr.start()
+
+
 if __name__ == '__main__':
     import argparse
+    import getpass
     parser = argparse.ArgumentParser()
-    parser.add_argument('username')
-    parser.add_argument('hostname')
-    parser.add_argument('port')
+    parser.add_argument('--ssh-user', default=getpass.getuser())
+    parser.add_argument('--ssh-host')
+    parser.add_argument('--ssh-port', type=int, default=22)
 
     args = parser.parse_args()
  
-    минута(args.username, args.hostname, args.port)
+    if not args.ssh_host:
+        import paramiko
+        client = paramiko.SSHClient()
+        client.load_system_host_keys()
+        client.set_missing_host_key_policy(paramiko.WarningPolicy())
+
+        #TODO find server in съучастници където реда няма %(hostname)s
+        server = None
+        server_port = None
+        for съучастник in вземи_съучастници():
+            if 'hostname' not in съучастник['адрес']:
+                username, server = съучастник['адрес'].split('@')
+                username = username.split('/')[-1]
+                server = server.split('/')[0]
+                if server[-1] == ':':
+                    server_port = 22
+                else:
+                    server_port = int(server.split(':')[1])
+                server = server.split(':')[0]
+        if not server:
+            raise RuntimeError("Нямам реално IP, но нямам и прехвърлящ сървър")
+
+        log.debug("Connecting to ssh host %s:%d ..." % (server, server_port))
+        try:
+            client.connect(
+                server,
+                server_port,
+                username=username,
+                #key_filename=options.keyfile,
+                #look_for_keys=options.look_for_keys,
+                #password=password,
+            )
+        except Exception as e:
+            log.error(e)
+            sys.exit(1)
+
+        remote_port = 10022
+
+        log.info(
+            "Now forwarding remote port %d to %s:%d ..."
+            % (remote_port, 'localhost', args.ssh_port)
+        )
+
+        reverse_forward_tunnel(
+            remote_port, 'localhost', args.ssh_port, client.get_transport()
+        )
+
+    минута(args.ssh_user, server, remote_port)
