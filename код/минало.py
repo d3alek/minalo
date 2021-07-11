@@ -159,7 +159,11 @@ def сглоби_минута(клон_шаблон, кандидат_клон_�
     log.debug(git.checkout('-B', кандидат_клон_шаблон))
 
     for клон in клони:
-        log.debug(git.merge(клон))
+        try:
+            log.debug(git.merge(клон))
+        except sh.ErrorReturnCode_1 as e:
+            log.error(e)
+            git.merge('--abort')
 
     with open('време', 'w') as f:
         f.write(време)

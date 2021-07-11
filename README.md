@@ -50,3 +50,8 @@ python rforward.py 3.122.41.243 -r localhost -p 10022 -u ubuntu
 ```
 
 Въпреки че localhost няма реално IP.
+
+## Git настройки
+```
+git config core.quotepath off
+```
