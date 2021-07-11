@@ -146,12 +146,12 @@ def изпращай_промени(водачи, клон_шаблон, usernam
 
         time.sleep(1)
 
-def сглоби_минута(кандидат_клон_шаблон, аз):
+def сглоби_минута(клон_шаблон, кандидат_клон_шаблон, аз):
     log.info('Сглобявам минута')
 
     време = сега().isoformat(timespec='minutes')
     #TODO вярваме на pre-receive hook че всички получени от remote аз-а ще са валидни
-    клони = list(filter(lambda к: 'refs/remote/'+аз in к, вземи_клони(local=False)))
+    клони = list(filter(lambda к: 'refs/heads/'+клон_шаблон in к, вземи_клони(local=False)))
     log.error(клони)
 
     log.debug(git.checkout('-B', кандидат_клон_шаблон))
@@ -295,7 +295,7 @@ def минута(username, host, port):
             изпращай_промени(водачи, клон_шаблон, username, host, port)
 
             if съм_водач:
-                сглоби_минута(кандидат_клон_шаблон, аз)
+                сглоби_минута(клон_шаблон, кандидат_клон_шаблон, аз)
             else:
                 time.sleep(max(0, СГЛОБЯВАНЕ - сега().second))
 
