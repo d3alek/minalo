@@ -152,6 +152,7 @@ def сглоби_минута(кандидат_клон_шаблон, аз):
     време = сега().isoformat(timespec='minutes')
     #TODO вярваме на pre-receive hook че всички получени от remote аз-а ще са валидни
     клони = list(filter(lambda к: 'refs/remote/'+аз in к, вземи_клони(local=False)))
+    log.error(клони)
 
     log.debug(git.checkout('-B', кандидат_клон_шаблон))
 
