@@ -10,6 +10,9 @@ from помощни import време_клон, СЛУШАНЕ, сега, взе
 
 import colorlog
 import logging
+import threading
+import paramiko
+
 log = colorlog.getLogger('минало')
 log.setLevel(logging.DEBUG)
 
@@ -346,9 +349,10 @@ def минута(username, host, port):
 
 # Промени в кода се приемат само с няколко (3) подписа на разработчици (такива които са правили вече промени по кода).
 
+import socket
+import select
+
 def handler(chan, host, port):
-    import socket
-    import select
     sock = socket.socket()
     try:
         sock.connect((host, port))
@@ -376,7 +380,7 @@ def handler(chan, host, port):
     sock.close()
     log.debug("Tunnel closed from %r" % (chan.origin_addr,))
 
-def reverse_forward_loop(transport):
+def reverse_forward_loop(transport, remote_host, remote_port):
     while True:
         chan = transport.accept(1000)
         if chan is None:
@@ -388,12 +392,21 @@ def reverse_forward_loop(transport):
         thr.start()
 
 def reverse_forward_tunnel(server_port, remote_host, remote_port, transport):
-    import threading
     transport.request_port_forward("", server_port)
-    thr = threading.Thread(target=reverse_forward_loop, args=(transport,))
+    thr = threading.Thread(target=reverse_forward_loop, args=(transport, remote_host, remote_port))
     thr.daemon = True
     thr.start()
 
+def раздели_адрес(адрес):
+    username, server = адрес.split('@')
+    username = username.split('/')[-1]
+    server = server.split('/')[0]
+    if server[-1] == ':':
+        server_port = 22
+    else:
+        server_port = int(server.split(':')[1])
+    server = server.split(':')[0]
+    return username, server, server_port
 
 if __name__ == '__main__':
     import argparse
@@ -408,33 +421,34 @@ if __name__ == '__main__':
     relay_ports_range = [10000, 11000]
  
     if not args.ssh_host:
-        import paramiko
         client = paramiko.SSHClient()
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.WarningPolicy())
 
         #TODO find server in съучастници където реда няма %(hostname)s
-        server = None
-        server_port = None
+        relays = []
+        remote_port = None
         for съучастник in вземи_съучастници():
-            username, server = съучастник['адрес'].split('@')
-            username = username.split('/')[-1]
-            server = server.split('/')[0]
-            if server[-1] == ':':
-                server_port = 22
-            else:
-                server_port = int(server.split(':')[1])
-            if server_port > relay_ports_range[0] and server_port < relay_ports_range[1]:
-                continue
-            server = server.split(':')[0]
-        if not server:
-            raise RuntimeError("Нямам реално IP, но нямам и прехвърлящ сървър")
+            log.debug('Пробвам %s за реле' % съучастник)
+            username, server, port = раздели_адрес(съучастник['адрес'])
 
-        log.debug("Connecting to ssh host %s:%d ..." % (server, server_port))
+            if съучастник['номер'] == аз:
+                remote_port = port
+            if port >= relay_ports_range[0] and port <= relay_ports_range[1]:
+                log.debug('Не става за реле - вече е зад тунел')
+            else:
+                relays.append((username, server, port))
+
+        if not relays:
+            raise RuntimeError("Нямам реално IP, но нямам и реле")
+
+        username, server, port = relays[0] #TODO random or iterate over all
+
+        log.debug("Connecting to ssh host %s@%s:%d ..." % (username, server, port))
         try:
             client.connect(
                 server,
-                server_port,
+                port,
                 username=username,
                 #key_filename=options.keyfile,
                 #look_for_keys=options.look_for_keys,
@@ -442,10 +456,13 @@ if __name__ == '__main__':
             )
         except Exception as e:
             log.error(e)
+            import sys
             sys.exit(1)
 
-        import random 
-        remote_port = random.randint(*relay_ports_range)
+
+        if not remote_port:
+            import random 
+            remote_port = random.randint(*relay_ports_range)
 
         log.info(
             "Now forwarding remote port %d to %s:%d ..."
@@ -453,10 +470,9 @@ if __name__ == '__main__':
         )
 
         reverse_forward_tunnel(
-            remote_port, 'localhost', args.ssh_port, client.get_transport()
-        )
+            remote_port, 'localhost', args.ssh_port, client.get_transport())
         ssh_host = server
-        ssh_port = remote_port
+        ssh_port = port
     else:
         ssh_host = args.ssh_host
         ssh_port = args.ssh_port
