@@ -116,11 +116,11 @@ def изпращай_промени(водачи, клон_шаблон, usernam
                         намерих_себе_си_грешен_адрес = index
 
             if намерих_себе_си_грешен_адрес or not намерих_себе_си:
-                if not намерих_себе_си:
-                    log.info('Не намерих себе си в съучастниците на водач %s' % водач)
                 if намерих_себе_си_грешен_адрес:
                     log.info('Намерих грешен адрес за себе си в съучастниците на водач %s' % водач)
                     съучастници.pop(намерих_себе_си_грешен_адрес)
+                else:
+                    log.info('Не намерих себе си в съучастниците на водач %s' % водач)
                             
                 log.debug(git.checkout('-B', клон_шаблон+'-'+аз))
                 съучастници.append({'номер': аз, 'адрес': водач_адрес})
@@ -472,7 +472,7 @@ if __name__ == '__main__':
         reverse_forward_tunnel(
             remote_port, 'localhost', args.ssh_port, client.get_transport())
         ssh_host = server
-        ssh_port = port
+        ssh_port = remote_port
     else:
         ssh_host = args.ssh_host
         ssh_port = args.ssh_port
