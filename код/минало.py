@@ -93,6 +93,9 @@ def изпращай_промени(водачи, клон_шаблон, usernam
         log.debug(git.add('authorized_keys'))
         log.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към authorized_keys'))
 
+    водач_папка = os.getcwd() + '/водач' #TODO направи ако не съществува чрез git clone .git водач --bare
+    водач_адрес = 'ssh://%s@%s:%s%s' % (username, host, port, водач_папка)
+
     for водач in водачи:
         log.debug(git.fetch(водач['номер'], 'main'))
         if not намерих_себе_си:
@@ -101,20 +104,26 @@ def изпращай_промени(водачи, клон_шаблон, usernam
             log.debug(git.checkout('-B', водач['номер']+'-main', '--track', водач['номер']+'/main'))
             съучастници = вземи_съучастници()
             намерих_себе_си = False
+            намерих_себе_си_грешен_адрес = False
             for съучастник in съучастници:
                 if съучастник['номер'] == аз:
-                    намерих_себе_си = True
+                    if съучастник['адрес'] == водач_адрес:
+                        намерих_себе_си = True
+                    else:
+                        намерих_себе_си_грешен_адрес = True
 
-            if not намерих_себе_си:
-                log.info('Не намерих себе си в съучастниците на водач', водач)
+            if намерих_себе_си_грешен_адрес or not намерих_себе_си:
+                log.info('Не намерих себе си в съучастниците на водач %s' % водач)
                 log.debug(git.checkout('-B', клон_шаблон+'-'+аз))
-                with open('съучастници', 'a+') as f:
-                    водач_папка = os.getcwd() + '/водач' #TODO направи ако не съществува чрез git clone .git водач --bare
-                    водач_адрес = 'ssh://%s@%s:%s%s' % (username, host, port, водач_папка)
-
-                    f.write('%s %s\n' % (аз, водач_адрес))
+                съучастници.append({'номер': аз, 'адрес': водач_адрес})
+                with open('съучастници', 'w') as f:
+                    for с in съучастници:
+                        f.write('%s %s\n' % (с['номер'], с['адрес']))
                 log.debug(git.add('съучастници'))
-                log.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
+                if намерих_себе_си_грешен_адрес:
+                    log.debug(git.commit('--gpg-sign='+аз, '-m', 'Обновявам адреса си в съучастници'))
+                else:
+                    log.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
 
                 try:
                     log.debug(git.push(водач['номер']))
@@ -271,8 +280,7 @@ def минута(username, host, port):
                 if съучастник['номер'] not in remotes:
                     git.remote.add(съучастник['номер'], съучастник['адрес'])
                 else:
-                    #TODO update url
-                    continue
+                    git.remote('set-url', съучастник['номер'], съучастник['адрес'])
 
             git.checkout('main')
             #if сега().second > СЛУШАНЕ:
@@ -381,6 +389,8 @@ if __name__ == '__main__':
     parser.add_argument('--ssh-port', type=int, default=22)
 
     args = parser.parse_args()
+
+    relay_ports_range = [10000, 11000]
  
     if not args.ssh_host:
         import paramiko
@@ -392,15 +402,16 @@ if __name__ == '__main__':
         server = None
         server_port = None
         for съучастник in вземи_съучастници():
-            if 'hostname' not in съучастник['адрес']:
-                username, server = съучастник['адрес'].split('@')
-                username = username.split('/')[-1]
-                server = server.split('/')[0]
-                if server[-1] == ':':
-                    server_port = 22
-                else:
-                    server_port = int(server.split(':')[1])
-                server = server.split(':')[0]
+            username, server = съучастник['адрес'].split('@')
+            username = username.split('/')[-1]
+            server = server.split('/')[0]
+            if server[-1] == ':':
+                server_port = 22
+            else:
+                server_port = int(server.split(':')[1])
+            if server_port > relay_ports_range[0] and server_port < relay_ports_range[1]:
+                continue
+            server = server.split(':')[0]
         if not server:
             raise RuntimeError("Нямам реално IP, но нямам и прехвърлящ сървър")
 
@@ -418,7 +429,8 @@ if __name__ == '__main__':
             log.error(e)
             sys.exit(1)
 
-        remote_port = 10022
+        import random 
+        remote_port = random.randint(*relay_ports_range)
 
         log.info(
             "Now forwarding remote port %d to %s:%d ..."
