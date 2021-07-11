@@ -4,6 +4,8 @@ import datetime
 import sh
 from sh import gpg2
 
+import os
+
 СЛУШАНЕ = 30
 
 sh2 = sh(_err_to_out=True)
@@ -44,6 +46,7 @@ def време_клон(кандидат=False, време=None):
   return време
 
 def вземи_аз():
+    os.environ['GNUPGHOME'] = os.getcwd() + '/тайник'
     keys = gpg2('--with-colons', '-K')
     for line in keys:
         if 'fpr' in line:

@@ -6,7 +6,6 @@ import sh
 import os
 from помощни import време_клон, СЛУШАНЕ, сега, вземи_водачи, изчисли_водачи, вземи_съучастници, вземи_аз
 
-os.environ['GNUPGHOME'] = os.getcwd() + '/тайник'
 аз = вземи_аз()
 
 import colorlog
