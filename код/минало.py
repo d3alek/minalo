@@ -134,7 +134,10 @@ def изпращай_промени(водачи, клон_шаблон, usernam
 
     while сега().second < СЛУШАНЕ:
         for водач in водачи:
-            log.debug(git.fetch(водач['номер']))
+            fetch = git.fetch(водач['номер'])
+            if len(fetch.strip()) > 0:
+                log.info("Промяна")
+                log.info(fetch)
         клони = вземи_клони(клон_шаблон)
 
         for клон in клони:
