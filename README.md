@@ -55,3 +55,15 @@ python rforward.py 3.122.41.243 -r localhost -p 10022 -u ubuntu
 ```
 git config core.quotepath off
 ```
+
+```
+.ssh/config
+---
+Host *
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+   LogLevel QUIET 
+```
+
+TODO
+Ако някой се включи, но не е в час (в минута по-скоро), не знае кой е водача. Тоест, ако знае коя е минутата и ако има правилните съучастници, може да познае, но... Затова да тегли main от няколко (да кажем 3) съучастника и ако всички са различни - кофти, избухни, но ако поне две са еднакви, ползвай него.
