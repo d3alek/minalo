@@ -48,3 +48,6 @@ def вземи_аз():
     for line in keys:
         if 'fpr' in line:
             return line.split(':')[9]
+
+if __name__ == '__main__':
+    print(вземи_аз())
