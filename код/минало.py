@@ -75,7 +75,17 @@ def rush(*args):
         glog.debug(pull)
     except Exception as e:
         glog.debug(e)
-    return git.push(*args)
+    
+    while True:
+        try:
+            return git.push(*args)
+        except Exception as e:
+            try:
+                pull = git.pull(*args, '--rebase')
+                glog.debug(pull)
+            except Exception as e:
+                glog.debug(e)
+
 
 def вземи_клони(шаблон='', local=True):
     клони = []
@@ -178,10 +188,13 @@ def изпращай_промени(водачи, minute_branch, username, host,
     git.checkout(minute_branch)
     while сега().second < СЛУШАНЕ:
         for водач in водачи:
-            fetch = git.fetch(водач)
-            if len(fetch.strip()) > 0:
-                log.info("Промяна")
-                log.info(fetch)
+            try:
+                fetch = git.fetch(водач)
+                if len(fetch.strip()) > 0:
+                    log.info("Промяна")
+                    log.info(fetch)
+            except:
+                log.error('Не успях да се свържа с водач ' + водач)
 
         for водач in водачи:
             glog.debug(rush(аз, minute_branch))
