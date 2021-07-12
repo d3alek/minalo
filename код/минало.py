@@ -31,7 +31,7 @@ nlog.addHandler(ch)
 glog.addHandler(ch)
 
 # СЛУШАНЕ идва от помощни.py
-СГЛОБЯВАНЕ = 35
+СГЛОБЯВАНЕ = 45
 ГЛАСУВАНЕ = 50
 ПРИЕМАНЕ = 60
 
@@ -189,10 +189,13 @@ def изпращай_промени(водачи, minute_branch, username, host,
     while сега().second < СЛУШАНЕ:
         for водач in водачи:
             try:
-                fetch = git.fetch(водач)
+                fetch = git.fetch(водач, minute_branch)
                 if len(fetch.strip()) > 0:
                     log.info("Промяна")
                     log.info(fetch)
+                    промяна = True
+                else:
+                    промяна = False
             except:
                 log.error('Не успях да се свържа с водач ' + водач)
 
