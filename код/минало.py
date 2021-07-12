@@ -330,7 +330,7 @@ def минута(username, host, port):
             if съм_водач:
                 log.info('Водач съм')
             else:
-                log.info('Не съм водач ' + водачи)
+                log.info('Не съм водач. Водачи: %s' % водачи)
             съучастници = вземи_съучастници()
 
             remotes = list(map(str.strip, git.remote().split('\n')))
