@@ -331,7 +331,7 @@ def минута(username, host, port):
 
             гласувай(водачи, кандидат_клон_шаблон, аз)
 
-            if git.branch('--show-current') != 'main':
+            if git.branch('--show-current').strip() != 'main':
                 приеми_минута(водачи, кандидат_клон_шаблон)
 
             else:
