@@ -383,7 +383,7 @@ def минута(username, host, port):
 
             time.sleep(max(0, ПРИЕМАНЕ - сега().second))
             log.info('Изтривам излишни клони')
-            if am_leader(водач):
+            if am_leader(водачи):
                 клони = вземи_клони(local=False)
                 for клон in клони:
                     шаблон = 'refs/remotes/%s/' % аз
