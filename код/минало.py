@@ -279,6 +279,7 @@ def приеми_минута(водачи, кандидат_клон_шабло
     log.info('Приемам ' + best)
     log.debug(git.checkout('main'))
     log.debug(git.reset(best, '--hard'))
+    git.push(аз,'main', '--force')
 
 # План
 ## 0. Теглим main от някой от съучастниците които са на линия.
@@ -331,7 +332,7 @@ def минута(username, host, port):
             if съм_водач:
                 log.info('Водач съм')
             else:
-                log.info('Не съм водач')
+                log.info('Не съм водач ' + водачи)
             съучастници = вземи_съучастници()
 
             remotes = list(map(str.strip, git.remote().split('\n')))
@@ -362,11 +363,9 @@ def минута(username, host, port):
                 break
 
             time.sleep(max(0, ПРИЕМАНЕ - сега().second))
-
             log.info('Изтривам излишни клони')
             if съм_водач:
                 клони = вземи_клони(local=False)
-                git.push(аз,'main')
                 for клон in клони:
                     шаблон = 'refs/remotes/%s/' % аз
                     if шаблон in клон and клон != 'refs/remotes/%s/main' % аз:
