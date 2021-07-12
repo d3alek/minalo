@@ -278,7 +278,7 @@ def приеми_минута(водачи, кандидат_клон_шабло
 
     log.info('Приемам ' + best)
     log.debug(git.checkout('main'))
-    log.debug(git.merge('--ff-only', best))
+    log.debug(git.reset(best, '--hard'))
 
 # План
 ## 0. Теглим main от някой от съучастниците които са на линия.
