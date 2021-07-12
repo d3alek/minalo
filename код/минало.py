@@ -102,8 +102,9 @@ def изпращай_промени(водачи, клон_шаблон, usernam
     remove = []
     for водач in водачи:
         try:
-            log.debug(git.fetch(водач['номер'], 'main'))
-        except:
+            log.debug(git.fetch(водач, 'main'))
+        except Exception as e:
+            log.error(e)
             log.error('Не успях да се свържа с водач ' + водач)
             remove.append(водач)
             continue
