@@ -43,7 +43,7 @@ def приготви():
     modified = []
     untracked = []
     status = git.status('--porcelain')
-    glog.debug(status)
+    glog.info(status)
     for status_line in status.strip().split('\n'):
         status, file_name = status_line.split()
         if status == 'M':
