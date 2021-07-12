@@ -345,6 +345,7 @@ def минута(username, host, port):
         if fellow['id'] not in remotes:
             glog.info(git.remote.add(fellow['id'], remote))
         else:
+            print('IMHERE')
             glog.info(git.remote('set-url', fellow['id'], remote))
         try:
             pull = git.pull('--ff-only', fellow['id'], 'main')
