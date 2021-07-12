@@ -17,7 +17,7 @@ def сега():
 def минута_от_деня():
   return сега().minute + сега().hour*60
 
-полета = ['номер', 'адрес']
+полета = ['id', 'remote']
 
 def вземи_водачи():
   with open('водачи') as f:
@@ -37,17 +37,13 @@ def изчисли_водачи():
   номер = минута_от_деня() % брой
   return [гласували[номер]]
 
-def време_клон(кандидат=False, време=None):
-  if време == None:
-    време = сега()
-  if време.second > СЛУШАНЕ:
-    време = време + datetime.timedelta(minutes=1)   
-  време = време.isoformat(timespec='minutes').replace(':','-') # защото Git клоните не могат да съдържат :
-  if кандидат:
-    време += '-кандидат'
-  #if ключ:
-  #  време += '-' + ключ
-  return време
+def calculate_minute_branch(t=None):
+  if t == None:
+    t = сега()
+  if t.second > СЛУШАНЕ:
+    t = t + datetime.timedelta(minutes=1)   
+  t = t.isoformat(timespec='minutes').replace(':','-') # защото Git клоните не могат да съдържат :
+  return t
 
 def вземи_аз():
     os.environ['GNUPGHOME'] = os.getcwd() + '/тайник'
