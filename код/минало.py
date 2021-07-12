@@ -72,9 +72,9 @@ def приготви():
 def rush(*args):
     try:
         pull = git.pull(*args, '--rebase')
-        glog.debug(pull)
+        glog.info(pull)
     except Exception as e:
-        glog.debug(e)
+        glog.error(e)
     
     while True:
         try:
@@ -82,9 +82,9 @@ def rush(*args):
         except Exception as e:
             try:
                 pull = git.pull(*args, '--rebase')
-                glog.debug(pull)
+                glog.info(pull)
             except Exception as e:
-                glog.debug(e)
+                glog.error(e)
 
 
 def вземи_клони(шаблон='', local=True):
