@@ -343,15 +343,16 @@ def минута(username, host, port):
         if fellow['id'] == аз:
             remote = водач_папка
         if fellow['id'] not in remotes:
-            glog.info(git.remote.add(fellow['id'], remote))
+            git.remote.add(fellow['id'], remote)
         else:
-            print('IMHERE', fellow['id'], remote)
-            glog.info(git.remote('set-url', fellow['id'], remote))
+            git.remote('set-url', fellow['id'], remote)
         try:
             pull = git.pull('--ff-only', fellow['id'], 'main')
             glog.debug(pull)
             if 'Already up to date' not in pull:
                 log.info('Изтеглих най-новото състояние от ' + fellow['id'])
+            else:
+                log.info('На равно съм със ' + fellow['id'])
         except Exception as e:
             log.debug('Не успях да се свържа с ' + fellow['id'])
             continue
@@ -374,14 +375,6 @@ def минута(username, host, port):
                 log.info('Водач съм')
             else:
                 log.info('Не съм водач. Водачи: %s' % водачи)
-            съучастници = вземи_съучастници()
-
-            remotes = list(map(str.strip, git.remote().split('\n')))
-            for съучастник in съучастници:
-                if съучастник['id'] not in remotes:
-                    git.remote.add(съучастник['id'], съучастник['remote'])
-                else:
-                    git.remote('set-url', съучастник['id'], съучастник['remote'])
 
             git.checkout('main')
             #if сега().second > СЛУШАНЕ:
