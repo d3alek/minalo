@@ -43,6 +43,8 @@ def приготви():
     modified = []
     untracked = []
     status = git.status('--porcelain')
+    if not status:
+        return
     glog.info(status)
     for status_line in status.strip().split('\n'):
         status, file_name = status_line.split()
@@ -72,7 +74,7 @@ def rush(*args):
         pull = git.pull(*args, '--rebase')
         glog.debug(pull)
     except Exception as e:
-        glog.error(e)
+        glog.debug(e)
     return git.push(*args)
 
 def вземи_клони(шаблон='', local=True):
