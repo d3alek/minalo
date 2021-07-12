@@ -71,7 +71,7 @@ def rush(*args):
         pull = git.pull(*args, '--rebase')
         glog.debug(pull)
     except Exception as e:
-        if "couldn't find remote ref" not in pull.stdout:
+        if "couldn't find remote ref" not in e:
             glog.error(e)
     return git.push(*args)
 
