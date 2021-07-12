@@ -279,7 +279,7 @@ def приеми_минута(водачи, кандидат_клон_шабло
     log.info('Приемам ' + best)
     log.debug(git.checkout('main'))
     log.debug(git.reset(best, '--hard'))
-    git.push(аз,'main', '--force')
+    git.push(аз, 'main', '--force')
 
 # План
 ## 0. Теглим main от някой от съучастниците които са на линия.
@@ -289,8 +289,6 @@ def приеми_минута(водачи, кандидат_клон_шабло
 ## 4. Когато има много неразбирателство, увеличи броя водачи като добавиш себе си към водачите
 ## 5. Всички приемат минутата на водача с най-много гласове. Тоест, комити.
 def минута(username, host, port):
-    #TODO какво да правим когато сме изостанали от веригата? Може би за това ни служи origin...
-    # Друг вариант е да си изберем водач на базата на сегашното време и да питаме него?
     stored_exception = None
 
     log.debug(git.checkout('main'))
@@ -465,7 +463,6 @@ if __name__ == '__main__':
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.WarningPolicy())
 
-        #TODO find server in съучастници където реда няма %(hostname)s
         relays = []
         remote_port = None
         for съучастник in вземи_съучастници():
