@@ -255,6 +255,7 @@ def приеми_минута(водачи, кандидат_клон_шабло
     log.debug(git.merge('--ff-only', best))
 
 # План
+## 0. Теглим main от някой от съучастниците които са на линия.
 ## 1. Всички промени се пращат към водачите до 30тата секунда от минутата. Водачите имат отговорност да синхронизират промените по между си.
 ## 2. Водачите слобяват кандидат минута, която съдържа ново време и нови водачи.
 ## 3. Всички кандидатстват за най-добрата минута, която водачите са предложили. Тоест, пращат комит.
@@ -265,12 +266,26 @@ def минута(username, host, port):
     # Друг вариант е да си изберем водач на базата на сегашното време и да питаме него?
     stored_exception = None
 
-    try:
-        log.debug(git.checkout('main'))
-        log.debug(git.pull('--ff-only', 'origin'))
-        log.debug(git.push(аз, 'main', '--force'))
-    except:
-        pass
+    log.debug(git.checkout('main'))
+    log.debug(git.pull('--ff-only', 'origin'))
+
+    fellows = вземи_съучастници()
+    remotes = list(map(str.strip, git.remote().split('\n')))
+    for fellow in fellows:
+        if fellow['номер'] not in remotes:
+            git.remote.add(fellow['номер'], fellow['адрес'])
+        else:
+            git.remote('set-url', fellow['номер'], fellow['адрес'])
+        try:
+            pull = git.pull('--ff-only', fellow['номер'], 'main')
+            log.debug(pull)
+            if 'Already up to date' not in pull:
+                log.info('Изтеглих най-новото състояние от ' + fellow['номер'])
+        except Exception as e:
+            log.error(e)
+            continue
+
+    log.debug(git.push(аз, 'main', '--force'))
 
     while True:
         try:
