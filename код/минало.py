@@ -263,7 +263,7 @@ def гласувай(водачи, minute_branch, aз):
             glog.debug(git.push(remote, minute_branch))
             гласувах = True
         except sh.ErrorReturnCode_1 as e:
-            log.error(e)
+            glog.debug(e)
             glog.debug(git.reset('--hard', 'HEAD~1'))
             glog.debug(git.pull(remote, minute_branch))
 
