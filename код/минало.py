@@ -342,11 +342,10 @@ def минута(username, host, port):
         remote = fellow['remote']
         if fellow['id'] == аз:
             remote = водач_папка
-        print(remote)
         if fellow['id'] not in remotes:
-            git.remote.add(fellow['id'], remote)
+            glog.info(git.remote.add(fellow['id'], remote))
         else:
-            git.remote('set-url', fellow['id'], remote)
+            glog.info(git.remote('set-url', fellow['id'], remote))
         try:
             pull = git.pull('--ff-only', fellow['id'], 'main')
             glog.debug(pull)
