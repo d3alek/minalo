@@ -38,22 +38,23 @@ glog.addHandler(ch)
 sh2 = sh(_err_to_out=True, _truncate_exc=False)
 git = sh2.git
 
-#def почисти():
-#    git.checkout('main')
-#    modified = []
-#    untracked = []
-#    for status_line in git.status('--porcelain').strip().split('\n'):
-#        status, file_name = status_line.split()
-#        if status == 'M':
-#            modified.append(file_name)
-#        elif status == '??':
-#            untracked.append(file_name)
-#
-#    git.checkout('-b', 'modified-'+време_клон())
-#    for m in modified:
-#        git.add(m)
-#
-#    git.commit('--gpg-sign='+аз, '-m', 'Запазваме локално променените файлове' + време_клон())
+def приготви():
+    glog.debug(git.checkout('main'))
+    modified = []
+    untracked = []
+    status = git.status('--porcelain')
+    glog.debug(status)
+    for status_line in status.strip().split('\n'):
+        status, file_name = status_line.split()
+        if status == 'M':
+            modified.append(file_name)
+        elif status == '??':
+            untracked.append(file_name)
+
+    for m in modified:
+        glog.debug(git.add(m))
+
+    glog.info(git.commit('--gpg-sign='+аз, '-m', 'Автоматично запазвам локално променени %s' % modified))
 #
 #    git.checkout('main')
 #    git.checkout('-b', 'untracked-'+време_клон())
@@ -211,7 +212,7 @@ def сглоби_минута(minute_branch, аз):
     
     glog.debug(git.commit('--gpg-sign='+аз, '-m', 'време ' + време))
 
-    glog.debug(git.push(аз, candidate_minute_branch))
+    glog.debug(git.push(аз, minute_branch))
 
     time.sleep(max(0, СГЛОБЯВАНЕ - сега().second))
 
@@ -307,6 +308,7 @@ def am_leader(leaders):
 ## 3.2 Когато няма кандидат минута, всеки поема водачеството и прави такава.
 ## 4. Всички приемат минутата на водача с най-много гласове. Тоест, комити.
 def минута(username, host, port):
+    приготви()
     stored_exception = None
 
     glog.debug(git.checkout('main'))

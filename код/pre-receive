@@ -1,0 +1,33 @@
+#!../venv/bin/python3
+
+import sys
+import os
+import fileinput
+from sh import git, sed
+print(os.getcwd())
+os.environ['GNUPGHOME'] = os.getcwd() + '/../тайник'
+sys.path.append(os.getcwd() + '/../')
+from помощни import време_клон
+
+#Format: "oldref newref branch"
+for line in fileinput.input():
+    print("pre-receive: Trying to push ref: %s" % line)
+    old, new, ref = line.split()
+    if new.replace('0','') == '':
+        #TODO handle delete
+        continue
+    key = git('verify-commit', new, '--raw', _err_to_out=True).split('VALIDSIG ')[1].split(' ')[0]
+    branch_name = ref.split('/')[-1]
+    очаквано_име = време_клон(key)
+    if old.replace('0','') == '' and branch_name != очаквано_име:
+        raise RuntimeError("Клона е с грешно име %s очаквано име %s" % (branch_name, очаквано_име))
+
+    main_rev = git('rev-list', 'main').split()[0]
+    missed_revs = git('rev-list', '%s..%s' % (main_rev, new))
+
+    for rev in missed_revs.split():
+        message = sed(git('cat-file', 'commit', rev, _err_to_out=True), '1,/^$/d')
+        print('message', message)
+        key = git('verify-commit', rev, '--raw', _err_to_out=True).split('VALIDSIG ')[1].split(' ')[0]
+        print('key', key)
+        # TODO inspect user is allowed to change files https://stackoverflow.com/questions/424071/how-do-i-list-all-of-the-files-in-a-commit to see changes and git show REVISION:/path/to/file to show actual file
