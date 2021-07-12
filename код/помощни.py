@@ -21,7 +21,7 @@ def минута_от_деня():
 
 def вземи_водачи():
   with open('водачи') as f:
-    return list(map(lambda s: dict(zip(полета, s.strip().split(' '))), f.readlines()))
+    return list(map(lambda s: s.strip(), f.readlines()))
 
 def вземи_съучастници():
   with open('съучастници') as f:
