@@ -28,7 +28,7 @@ def вземи_съучастници():
       return list(map(lambda s: dict(zip(полета, s.strip().split(' '))), f.readlines()))
 
 def вземи_гласували():
-  with open('гласували') as f:
+  with open('гласове') as f:
       return list(map(lambda s: s.strip(), f.readlines()))
 
 def изчисли_водачи():
