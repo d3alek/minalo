@@ -232,8 +232,6 @@ def сглоби_минута(minute_branch, аз):
 
     glog.debug(git.push(аз, minute_branch))
 
-    time.sleep(max(0, СГЛОБЯВАНЕ - сега().second))
-
 def гласувай(водачи, minute_branch, aз):
     log.info('Гласувам')
 
@@ -243,7 +241,7 @@ def гласувай(водачи, minute_branch, aз):
     клони = вземи_клони(шаблон=minute_branch, local=False)
     if not клони:
         log.error('Водачите не са си свършили работата. Поемам ролята на водач')
-        сглоби_минута(minute_branch, аз)
+        сглоби_минута(minute_branch, аз) # TODO това вече не следва да се случва:
         for fellow in вземи_съучастници():
             try:
                 glog.debug(git.fetch(fellow['id'], minute_branch))
@@ -352,7 +350,7 @@ def минута(username, host, port):
             if 'Already up to date' not in pull:
                 log.info('Изтеглих най-новото състояние от ' + fellow['id'])
             else:
-                log.info('На равно съм със ' + fellow['id'])
+                log.info('Не взимам нищо ново от ' + fellow['id'])
         except Exception as e:
             log.debug('Не успях да се свържа с ' + fellow['id'])
             continue
@@ -384,10 +382,9 @@ def минута(username, host, port):
 
             изпращай_промени(водачи, minute_branch, username, host, port)
 
-            if am_leader(водачи):
-                сглоби_минута(minute_branch, аз)
-            else:
-                time.sleep(max(0, СГЛОБЯВАНЕ - сега().second))
+            # какви са последиците че всички правят това?
+            сглоби_минута(minute_branch, аз)
+            time.sleep(max(0, СГЛОБЯВАНЕ - сега().second))
 
             гласувай(водачи, minute_branch, аз)
 
