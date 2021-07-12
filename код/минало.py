@@ -67,7 +67,12 @@ git = sh2.git
 #    git.checkout('main')
 
 def rush(*args):
-    glog.debug(git.pull(*args, '--rebase'))
+    try:
+        pull = git.pull(*args, '--rebase')
+        glog.debug(pull)
+    except Exception as e:
+        if "couldn't find remote ref" not in pull.stdout:
+            glog.error(e)
     return git.push(*args)
 
 def вземи_клони(шаблон='', local=True):
@@ -89,7 +94,12 @@ def вземи_клони(шаблон='', local=True):
 
 def изпращай_промени(водачи, minute_branch, username, host, port):
     log.info('Слушам и изпращам промени към водачите')
-    git.branch(minute_branch)
+    try:
+        glog.debug(git.branch(minute_branch))
+    except:
+        pass
+    glog.debug(git.checkout(minute_branch))
+    glog.debug(rush(аз, minute_branch))
 
     намерих_себе_си = False
     with open(os.environ['HOME'] + '/.ssh/id_rsa.pub') as f:
@@ -100,9 +110,6 @@ def изпращай_промени(водачи, minute_branch, username, host,
                 намерих_себе_си = True
     if not намерих_себе_си:
         log.info('Не намерих себе си в authorized_keys')
-
-        glog.debug(git.checkout(minute_branch))
-
         with open('authorized_keys', 'a+') as f:
             f.write(my_key)
         glog.debug(git.add('authorized_keys'))
