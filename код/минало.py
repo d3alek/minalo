@@ -14,14 +14,20 @@ import threading
 import paramiko
 
 log = colorlog.getLogger('минало')
+nlog = colorlog.getLogger('мрежа')
+glog = colorlog.getLogger('git')
 log.setLevel(logging.DEBUG)
+nlog.setLevel(logging.INFO)
+glog.setLevel(logging.INFO)
 
 ch = colorlog.StreamHandler()
 ch.setLevel(logging.DEBUG)
 ch.setFormatter(colorlog.ColoredFormatter(
-    '%(log_color)s%(levelname)s:'+аз[:4]+':%(message)s'))
+    '%(log_color)s%(levelname)s:%(name)s:'+аз[:4]+':%(message)s'))
 
 log.addHandler(ch)
+nlog.addHandler(ch)
+glog.addHandler(ch)
 
 # СЛУШАНЕ идва от помощни.py
 СГЛОБЯВАНЕ = 35
@@ -89,12 +95,12 @@ def изпращай_промени(водачи, клон_шаблон, usernam
     if not намерих_себе_си:
         log.info('Не намерих себе си в authorized_keys')
 
-        log.debug(git.checkout('-B', клон_шаблон+'-'+аз))
+        glog.debug(git.checkout('-B', клон_шаблон+'-'+аз))
 
         with open('authorized_keys', 'a+') as f:
             f.write(my_key)
-        log.debug(git.add('authorized_keys'))
-        log.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към authorized_keys'))
+        glog.debug(git.add('authorized_keys'))
+        glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към authorized_keys'))
 
     водач_папка = os.getcwd() + '/водач' #TODO направи ако не съществува чрез git clone .git водач --bare
     водач_адрес = 'ssh://%s@%s:%s%s' % (username, host, port, водач_папка)
@@ -102,16 +108,16 @@ def изпращай_промени(водачи, клон_шаблон, usernam
     remove = []
     for водач in водачи:
         try:
-            log.debug(git.fetch(водач, 'main'))
+            glog.debug(git.fetch(водач, 'main'))
         except Exception as e:
             log.error(e)
             log.error('Не успях да се свържа с водач ' + водач)
             remove.append(водач)
             continue
         if not намерих_себе_си:
-            log.debug(git.push(водач['номер']))
+            glog.debug(git.push(водач['номер']))
         else:
-            log.debug(git.checkout('-B', водач+'-main', '--track', водач+'/main'))
+            glog.debug(git.checkout('-B', водач+'-main', '--track', водач+'/main'))
             съучастници = вземи_съучастници()
             намерих_себе_си = False
             намерих_себе_си_грешен_адрес = None
@@ -129,23 +135,23 @@ def изпращай_промени(водачи, клон_шаблон, usernam
                 else:
                     log.info('Не намерих себе си в съучастниците на водач %s' % водач)
                             
-                log.debug(git.checkout('-B', клон_шаблон+'-'+аз))
+                glog.debug(git.checkout('-B', клон_шаблон+'-'+аз))
                 съучастници.append({'номер': аз, 'адрес': водач_адрес})
                 with open('съучастници', 'w') as f:
                     for с in съучастници:
                         f.write('%s %s\n' % (с['номер'], с['адрес']))
-                log.debug(git.add('съучастници'))
+                glog.debug(git.add('съучастници'))
                 if намерих_себе_си_грешен_адрес:
-                    log.debug(git.commit('--gpg-sign='+аз, '-m', 'Обновявам адреса си в съучастници'))
+                    glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Обновявам адреса си в съучастници'))
                 else:
-                    log.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
+                    glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
 
                 try:
-                    log.debug(git.push(водач))
+                    glog.debug(git.push(водач))
                 except sh.ErrorReturnCode_1 as e:
                     log.exception(e)
 
-        log.debug(git.checkout('main'))
+        glog.debug(git.checkout('main'))
 
     if remove:
         for r in remove:
@@ -163,7 +169,7 @@ def изпращай_промени(водачи, клон_шаблон, usernam
 
         for клон in клони:
             for водач in водачи:
-                log.debug(git.push(водач, клон))
+                glog.debug(git.push(водач, клон))
 
         time.sleep(1)
 
@@ -176,11 +182,11 @@ def сглоби_минута(клон_шаблон, кандидат_клон_�
     # Тук нарочно взимаме само клоните, получени от нас - само на тях можем да вярваме
     клони = list(filter(lambda к: 'refs/remotes/%s' % аз in к and клон_шаблон in к, клони))
 
-    log.debug(git.checkout('-B', кандидат_клон_шаблон))
+    glog.debug(git.checkout('-B', кандидат_клон_шаблон))
 
     for клон in клони:
         try:
-            log.debug(git.merge(клон))
+            glog.debug(git.merge(клон))
         except sh.ErrorReturnCode_1 as e:
             log.error(e)
             git.merge('--abort')
@@ -194,14 +200,14 @@ def сглоби_минута(клон_шаблон, кандидат_клон_�
     with open('водачи', 'w') as f:
         f.write('\n'.join(map(lambda d: "%s" % (d['номер']), изчисли_водачи())))
 
-    log.debug(git.add('време'))
-    log.debug(git.add('гласове'))
-    log.debug(git.add('водачи'))
+    glog.debug(git.add('време'))
+    glog.debug(git.add('гласове'))
+    glog.debug(git.add('водачи'))
     
-    log.debug(git.commit('--gpg-sign='+аз, '-m', 'време ' + време))
+    glog.debug(git.commit('--gpg-sign='+аз, '-m', 'време ' + време))
 
-    log.debug(git.push(аз))
-    log.debug(git.checkout('main'))
+    glog.debug(git.push(аз))
+    glog.debug(git.checkout('main'))
 
     time.sleep(max(0, СГЛОБЯВАНЕ - сега().second))
 
@@ -209,7 +215,7 @@ def гласувай(водачи, клон_шаблон, кандидат_кл�
     log.info('Гласувам')
 
     for водач in водачи:
-        log.debug(git.fetch(водач))
+        glog.debug(git.fetch(водач))
 
     клони = вземи_клони(шаблон=кандидат_клон_шаблон, local=False)
     if not клони:
@@ -218,7 +224,7 @@ def гласувай(водачи, клон_шаблон, кандидат_кл�
         сглоби_минута(клон_шаблон, кандидат_клон_шаблон, аз)
         for fellow in вземи_съучастници():
             try:
-                log.debug(git.fetch(fellow['номер']))
+                glog.debug(git.fetch(fellow['номер']))
                 водачи.append(fellow['номер']) #TODO ако са много участници това може да избухне
             except Exception:
                 log.error('Не успях да изтелгя последните промени от ' + fellow['номер']) 
@@ -237,20 +243,20 @@ def гласувай(водачи, клон_шаблон, кандидат_кл�
     log.info('Гласувам за ' + best)
     remote = best.split('/')[2]
     гласувах = False
-    log.debug(git.checkout('-B', кандидат_клон_шаблон+'+глас', '--track', best))
+    glog.debug(git.checkout('-B', кандидат_клон_шаблон+'+глас', '--track', best))
     while not гласувах:
         try:
             with open('гласове', 'a+') as f:
                 f.write(аз+'\n')
 
-            log.debug(git.add('гласове'))
-            log.debug(git.commit('--gpg-sign='+аз, '-m', 'Глас от ' + аз))
-            log.debug(git.push(remote, 'HEAD:'+кандидат_клон_шаблон))
+            glog.debug(git.add('гласове'))
+            glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Глас от ' + аз))
+            glog.debug(git.push(remote, 'HEAD:'+кандидат_клон_шаблон))
             гласувах = True
         except sh.ErrorReturnCode_1 as e:
             log.error(e)
-            log.debug(git.reset('--hard', 'HEAD~1'))
-            log.debug(git.pull())
+            glog.debug(git.reset('--hard', 'HEAD~1'))
+            glog.debug(git.pull())
 
     time.sleep(max(0, ГЛАСУВАНЕ - сега().second))
     return съм_водач
@@ -263,7 +269,7 @@ def приеми_минута(водачи, кандидат_клон_шабло
 
     for водач in водачи:
         try:
-            log.debug(git.fetch(водач))
+            glog.debug(git.fetch(водач))
         except Exception as e:
             log.error(e)
             log.error('Не успях да се свържа с водач ' + водач)
@@ -277,8 +283,8 @@ def приеми_минута(водачи, кандидат_клон_шабло
             best_count = count
 
     log.info('Приемам ' + best)
-    log.debug(git.checkout('main'))
-    log.debug(git.reset(best, '--hard'))
+    glog.debug(git.checkout('main'))
+    glog.debug(git.reset(best, '--hard'))
     git.push(аз, 'main', '--force')
 
 # План
@@ -291,8 +297,8 @@ def приеми_минута(водачи, кандидат_клон_шабло
 def минута(username, host, port):
     stored_exception = None
 
-    log.debug(git.checkout('main'))
-    log.debug(git.pull('--ff-only', 'origin'))
+    glog.debug(git.checkout('main'))
+    glog.debug(git.pull('--ff-only', 'origin'))
 
     fellows = вземи_съучастници()
     remotes = list(map(str.strip, git.remote().split('\n')))
@@ -310,7 +316,7 @@ def минута(username, host, port):
             log.error(e)
             continue
 
-    log.debug(git.push(аз, 'main', '--force'))
+    glog.debug(git.push(аз, 'main', '--force'))
 
     while True:
         try:
@@ -370,13 +376,13 @@ def минута(username, host, port):
 
                         log.debug(клон)
                         клон = клон.split(шаблон)[1]
-                        log.debug(git.push(аз, '--delete', клон))
+                        glog.debug(git.push(аз, '--delete', клон))
 
             клони = вземи_клони(local=True)
             for клон in клони:
                 if клон != 'refs/heads/main':
                     клон = клон.split('refs/heads/')[1]
-                    log.debug(git.branch('-D', клон))
+                    glog.debug(git.branch('-D', клон))
         except KeyboardInterrupt:
             if stored_exception:
                 raise 
@@ -395,10 +401,10 @@ def handler(chan, host, port):
     try:
         sock.connect((host, port))
     except Exception as e:
-        log.debug("Forwarding request to %s:%d failed: %r" % (host, port, e))
+        nlog.debug("Forwarding request to %s:%d failed: %r" % (host, port, e))
         return
 
-    log.debug(
+    nlog.debug(
         "Connected!  Tunnel open %r -> %r -> %r"
         % (chan.origin_addr, chan.getpeername(), (host, port))
     )
@@ -416,7 +422,7 @@ def handler(chan, host, port):
             sock.send(data)
     chan.close()
     sock.close()
-    log.debug("Tunnel closed from %r" % (chan.origin_addr,))
+    nlog.debug("Tunnel closed from %r" % (chan.origin_addr,))
 
 def reverse_forward_loop(transport, remote_host, remote_port):
     while True:
@@ -466,13 +472,13 @@ if __name__ == '__main__':
         relays = []
         remote_port = None
         for съучастник in вземи_съучастници():
-            log.debug('Пробвам %s за реле' % съучастник)
+            nlog.debug('Пробвам %s за реле' % съучастник)
             username, server, port = раздели_адрес(съучастник['адрес'])
 
             if съучастник['номер'] == аз:
                 remote_port = port
             if port >= relay_ports_range[0] and port <= relay_ports_range[1]:
-                log.debug('Не става за реле - вече е зад тунел')
+                nlog.debug('Не става за реле - вече е зад тунел')
             else:
                 relays.append((username, server, port))
 
@@ -481,7 +487,7 @@ if __name__ == '__main__':
 
         username, server, port = relays[0] #TODO random or iterate over all
 
-        log.debug("Connecting to ssh host %s@%s:%d ..." % (username, server, port))
+        nlog.debug("Connecting to ssh host %s@%s:%d ..." % (username, server, port))
         try:
             client.connect(
                 server,
@@ -492,7 +498,7 @@ if __name__ == '__main__':
                 #password=password,
             )
         except Exception as e:
-            log.error(e)
+            nlog.error(e)
             import sys
             sys.exit(1)
 
@@ -501,7 +507,7 @@ if __name__ == '__main__':
             import random 
             remote_port = random.randint(*relay_ports_range)
 
-        log.info(
+        nlog.info(
             "Now forwarding remote port %d to %s:%d ..."
             % (remote_port, 'localhost', args.ssh_port)
         )
