@@ -14,6 +14,8 @@ import logging
 import paramiko
 import network
 
+import enlighten
+
 log = colorlog.getLogger('минало')
 nlog = colorlog.getLogger('мрежа')
 glog = colorlog.getLogger('git')
@@ -241,7 +243,7 @@ def гласувай(водачи, minute_branch, aз):
     remote = best.split('/')[2]
     гласувах = False
     glog.debug(git.checkout(minute_branch))
-    glog.debug(git.pull(remote, minute_branch, '-X=theirs'))
+    glog.debug(git.pull('--no-edit', '-s', 'recursive', '-X', 'theirs', remote, minute_branch))
 
     while not гласувах:
         try:
@@ -406,6 +408,8 @@ if __name__ == '__main__':
     parser.add_argument('--ssh-port', type=int, default=22)
 
     args = parser.parse_args()
+
+    pbar = enlighten.Counter(total=100, desc='Basic', unit='ticks')
 
     #TODO премести в network.py
     relay_ports_range = [10000, 11000]
