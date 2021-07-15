@@ -191,7 +191,7 @@ def изпращай_промени(водачи, minute_branch, username, host,
         for водач in водачи:
             try:
                 fetch = git.fetch(водач, minute_branch)
-                if len(fetch.strip()) > 0:
+                if 'Already up to date' not in fetch.strip():
                     log.info("Промяна")
                     glog.debug(fetch)
                     промяна = True
@@ -397,7 +397,7 @@ def минута(username, host, port):
                 break
             time.sleep(max(0, ПРИЕМАНЕ - сега().second))
 
-            log.info('Изчиствам')
+            log.info('Почиствам')
             if am_leader(водачи):
                 клони = вземи_клони(local=False)
                 for клон in клони:
@@ -413,7 +413,7 @@ def минута(username, host, port):
                 if клон != 'refs/heads/main':
                     клон = клон.split('refs/heads/')[1]
                     glog.debug(git.branch('-D', клон))
-            time.sleep(max(0, ИЗЧИСТВАНЕ - сега().second))
+            time.sleep(max(0, ПОЧИСТВАНЕ - сега().second))
         except KeyboardInterrupt:
             if stored_exception:
                 raise 
