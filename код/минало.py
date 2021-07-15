@@ -11,8 +11,8 @@ from помощни import calculate_minute_branch, СЛУШАНЕ, сега, в
 
 import colorlog
 import logging
-import threading
 import paramiko
+import network
 
 log = colorlog.getLogger('минало')
 nlog = colorlog.getLogger('мрежа')
@@ -235,22 +235,26 @@ def сглоби_минута(minute_branch, аз):
 def гласувай(водачи, minute_branch, aз):
     log.info('Гласувам')
 
-    for водач in водачи:
-        glog.debug(git.fetch(водач, minute_branch))
+    for fellow in вземи_съучастници():
+        try:
+            glog.debug(git.fetch(fellow['id'], minute_branch))
+        except:
+            log.error('Не успях да изтелгя последните промени от ' + fellow['id']) 
+
 
     клони = вземи_клони(шаблон=minute_branch, local=False)
-    if not клони:
-        log.error('Водачите не са си свършили работата. Поемам ролята на водач')
-        сглоби_минута(minute_branch, аз) # TODO това вече не следва да се случва:
-        for fellow in вземи_съучастници():
-            try:
-                glog.debug(git.fetch(fellow['id'], minute_branch))
-                водачи.append(fellow['id']) #TODO ако са много участници това може да избухне
-            except Exception:
-                log.error('Не успях да изтелгя последните промени от ' + fellow['id']) 
+#    if not клони:
+#        log.error('Водачите не са си свършили работата. Поемам ролята на водач')
+#        сглоби_минута(minute_branch, аз) # TODO това вече не следва да се случва:
+#        for fellow in вземи_съучастници():
+#            try:
+#                glog.debug(git.fetch(fellow['id'], minute_branch))
+#                водачи.append(fellow['id']) #TODO ако са много участници това може да избухне
+#            except Exception:
+#                log.error('Не успях да изтелгя последните промени от ' + fellow['id']) 
 
 
-        клони = вземи_клони(шаблон=minute_branch, local=False)
+    клони = вземи_клони(шаблон=minute_branch, local=False)
         # Вече със сигурност имаме поне 1 кандидат минута - тази който ние сме направили
 
     best = None
@@ -334,6 +338,7 @@ def минута(username, host, port):
         log.info('Правя гол водач с който ще общуват съучастниците')
         glog.debug(git.clone('.git', водач_папка, '--bare'))
 
+    #TODO отдели
     fellows = вземи_съучастници()
     remotes = list(map(str.strip, git.remote().split('\n')))
     for fellow in fellows:
@@ -375,10 +380,6 @@ def минута(username, host, port):
                 log.info('Не съм водач. Водачи: %s' % водачи)
 
             git.checkout('main')
-            #if сега().second > СЛУШАНЕ:
-            #    print(сега(), "Изчаквам новата минута")
-            #    time.sleep(ПРИЕМАНЕ - сега().second - сега().microsecond/1000000) # TODO това работи добре
-            #    continue
 
             изпращай_промени(водачи, minute_branch, username, host, port)
 
@@ -420,65 +421,6 @@ def минута(username, host, port):
 
 # Промени в кода се приемат само с няколко (3) подписа на разработчици (такива които са правили вече промени по кода).
 
-import socket
-import select
-
-def handler(chan, host, port):
-    sock = socket.socket()
-    try:
-        sock.connect((host, port))
-    except Exception as e:
-        nlog.debug("Forwarding request to %s:%d failed: %r" % (host, port, e))
-        return
-
-    nlog.debug(
-        "Connected!  Tunnel open %r -> %r -> %r"
-        % (chan.origin_addr, chan.getpeername(), (host, port))
-    )
-    while True:
-        r, w, x = select.select([sock, chan], [], [])
-        if sock in r:
-            data = sock.recv(1024)
-            if len(data) == 0:
-                break
-            chan.send(data)
-        if chan in r:
-            data = chan.recv(1024)
-            if len(data) == 0:
-                break
-            sock.send(data)
-    chan.close()
-    sock.close()
-    nlog.debug("Tunnel closed from %r" % (chan.origin_addr,))
-
-def reverse_forward_loop(transport, remote_host, remote_port):
-    while True:
-        chan = transport.accept(1000)
-        if chan is None:
-            continue
-        thr = threading.Thread(
-            target=handler, args=(chan, remote_host, remote_port)
-        )
-        thr.daemon = True
-        thr.start()
-
-def reverse_forward_tunnel(server_port, remote_host, remote_port, transport):
-    transport.request_port_forward("", server_port)
-    thr = threading.Thread(target=reverse_forward_loop, args=(transport, remote_host, remote_port))
-    thr.daemon = True
-    thr.start()
-
-def раздели_адрес(адрес):
-    username, server = адрес.split('@')
-    username = username.split('/')[-1]
-    server = server.split('/')[0]
-    if server[-1] == ':':
-        server_port = 22
-    else:
-        server_port = int(server.split(':')[1])
-    server = server.split(':')[0]
-    return username, server, server_port
-
 if __name__ == '__main__':
     import argparse
     import getpass
@@ -489,6 +431,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    #TODO премести в network.py
     relay_ports_range = [10000, 11000]
  
     if not args.ssh_host:
@@ -500,7 +443,7 @@ if __name__ == '__main__':
         remote_port = None
         for съучастник in вземи_съучастници():
             nlog.debug('Пробвам %s за реле' % съучастник)
-            username, server, port = раздели_адрес(съучастник['remote'])
+            username, server, port = network.раздели_адрес(съучастник['remote'])
 
             if съучастник['id'] == аз:
                 remote_port = port
@@ -539,7 +482,7 @@ if __name__ == '__main__':
             % (remote_port, 'localhost', args.ssh_port)
         )
 
-        reverse_forward_tunnel(
+        network.reverse_forward_tunnel(
             remote_port, 'localhost', args.ssh_port, client.get_transport())
         ssh_host = server
         ssh_port = remote_port
