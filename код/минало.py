@@ -122,7 +122,7 @@ def check_authorized_keys(minute_branch):
         # Това обновява minute_branch от нашия водач, като обновява и него. По него ние получаваме съобщения от другите, затова е хубаво да се обновяваме. После обновения клон пращаме на сегашния водач
         glog.debug(rush(аз, minute_branch))
 
-def check_fellows(minute_branch):
+def check_fellows(minute_branch, username, host, port):
     водач_адрес = 'ssh://%s@%s:%s%s' % (username, host, port, водач_папка)
 
     съучастници = get_fellows()
@@ -168,7 +168,7 @@ def изпращай_промени(водачи, minute_branch, username, host,
     glog.debug(rush(аз, minute_branch))
 
     check_authorized_keys(minute_branch)
-    check_fellows(minute_branch)
+    check_fellows(minute_branch, username, host, port)
 
     #TODO тегли промени от другите и ги добавяй към своя клон
     for f in get_fellows():
