@@ -180,8 +180,9 @@ def изпращай_промени(водачи, minute_branch, username, host,
         try:
             pull = git.pull('--no-rebase', '--no-edit', f['id'], minute_branch)
             log.info(pull)
-        except:
+        except Exception as e:
             log.error('Не успях да дръпна %s от %s' % (minute_branch, f['id']))
+            log.error(e)
 
     time.sleep(max(0, СЛУШАНЕ - сега().second))
 
