@@ -33,7 +33,8 @@ glog.addHandler(ch)
 # СЛУШАНЕ идва от помощни.py
 СГЛОБЯВАНЕ = 45
 ГЛАСУВАНЕ = 50
-ПРИЕМАНЕ = 60
+ПРИЕМАНЕ = 57
+ПОЧИСТВАНЕ = 60
 
 sh2 = sh(_err_to_out=True, _truncate_exc=False)
 git = sh2.git
@@ -192,7 +193,7 @@ def изпращай_промени(водачи, minute_branch, username, host,
                 fetch = git.fetch(водач, minute_branch)
                 if len(fetch.strip()) > 0:
                     log.info("Промяна")
-                    log.info(fetch)
+                    glog.debug(fetch)
                     промяна = True
                 else:
                     промяна = False
@@ -394,9 +395,9 @@ def минута(username, host, port):
 
             if stored_exception:
                 break
-
             time.sleep(max(0, ПРИЕМАНЕ - сега().second))
-            log.info('Изтривам излишни клони')
+
+            log.info('Изчиствам')
             if am_leader(водачи):
                 клони = вземи_клони(local=False)
                 for клон in клони:
@@ -412,13 +413,13 @@ def минута(username, host, port):
                 if клон != 'refs/heads/main':
                     клон = клон.split('refs/heads/')[1]
                     glog.debug(git.branch('-D', клон))
+            time.sleep(max(0, ИЗЧИСТВАНЕ - сега().second))
         except KeyboardInterrupt:
             if stored_exception:
                 raise 
             import sys
             stored_exception = sys.exc_info()
             log.warning('Ще изляза в края на тази минута. Прекъсни отново за да изляза веднага')
-
 
 # Промени в кода се приемат само с няколко (3) подписа на разработчици (такива които са правили вече промени по кода).
 
