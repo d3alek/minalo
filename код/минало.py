@@ -172,7 +172,7 @@ def изпращай_промени(водачи, minute_branch, username, host,
 
     #TODO тегли промени от другите и ги добавяй към своя клон
     for f in get_fellows():
-        pull = git.pull('--merge', '--no-edit', f['id'], minute_branch)
+        pull = git.pull('--rebase=false', '--no-edit', f['id'], minute_branch)
         log.info(pull)
 
     time.sleep(max(0, СЛУШАНЕ - сега().second))
