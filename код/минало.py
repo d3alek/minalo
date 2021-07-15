@@ -331,6 +331,7 @@ def минута(username, host, port):
     приготви()
     stored_exception = None
 
+    log.info('Взимаме от origin')
     glog.debug(git.checkout('main'))
     glog.debug(git.pull('--ff-only', 'origin'))
 
