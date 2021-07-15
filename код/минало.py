@@ -191,7 +191,7 @@ def изпращай_промени(водачи, minute_branch, username, host,
         for водач in водачи:
             try:
                 fetch = git.fetch(водач, minute_branch)
-                if 'Already up to date' not in fetch.strip():
+                if 'Already up to date' not in fetch.stdout:
                     log.info("Промяна")
                     glog.debug(fetch)
                     промяна = True
