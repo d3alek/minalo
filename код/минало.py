@@ -158,7 +158,7 @@ def check_fellows(minute_branch, username, host, port):
             glog.exception(e)
 
 def изпращай_промени(водачи, minute_branch, username, host, port):
-    log.info('Слушам и изпращам промени към водачите')
+    log.info('Слушам и изпращам промени')
     try:
         glog.debug(git.branch(minute_branch))
     except:
@@ -178,7 +178,7 @@ def изпращай_промени(водачи, minute_branch, username, host,
     #TODO тегли промени от другите и ги добавяй към своя клон
     for f in get_fellows():
         try:
-            pull = git.pull('--rebase=false', '--no-edit', f['id'], minute_branch)
+            pull = git.pull('--no-rebase', '--no-edit', f['id'], minute_branch)
             log.info(pull)
         except:
             log.error('Не успях да дръпна %s от %s' % (minute_branch, f['id']))
@@ -223,19 +223,6 @@ def гласувай(водачи, minute_branch, aз):
 
 
     клони = вземи_клони(шаблон=minute_branch, local=False)
-#    if not клони:
-#        log.error('Водачите не са си свършили работата. Поемам ролята на водач')
-#        сглоби_минута(minute_branch, аз) # TODO това вече не следва да се случва:
-#        for fellow in вземи_съучастници():
-#            try:
-#                glog.debug(git.fetch(fellow['id'], minute_branch))
-#                водачи.append(fellow['id']) #TODO ако са много участници това може да избухне
-#            except Exception:
-#                log.error('Не успях да изтелгя последните промени от ' + fellow['id']) 
-
-
-    клони = вземи_клони(шаблон=minute_branch, local=False)
-        # Вече със сигурност имаме поне 1 кандидат минута - тази който ние сме направили
 
     best = None
     best_count = None
@@ -249,7 +236,7 @@ def гласувай(водачи, minute_branch, aз):
     remote = best.split('/')[2]
     гласувах = False
     glog.debug(git.checkout(minute_branch))
-    glog.debug(git.pull(remote, minute_branch))
+    glog.debug(git.pull(remote, minute_branch, '-X theirs'))
 
     while not гласувах:
         try:
@@ -273,12 +260,13 @@ def приеми_минута(водачи, minute_branch):
     best = None
     best_count = None
 
-    for водач in водачи:
+    for f in get_fellows():
         try:
-            glog.debug(git.fetch(водач, minute_branch))
+            glog.debug(git.fetch(f['id'], minute_branch))
+            log.info('Изтеглих последни промени от ' + f['id'])
         except Exception as e:
             log.error(e)
-            log.error('Не успях да се свържа с водач ' + водач)
+            log.error('Не успях да се свържа с ' + f['id'])
 
     клони = вземи_клони(шаблон=minute_branch, local=False)
 
