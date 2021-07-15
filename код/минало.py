@@ -4,7 +4,7 @@ import datetime
 import time
 import sh
 import os
-from помощни import calculate_minute_branch, СЛУШАНЕ, сега, вземи_водачи, изчисли_водачи, вземи_съучастници, вземи_аз
+from помощни import calculate_minute_branch, СЛУШАНЕ, сега, вземи_водачи, изчисли_водачи, get_fellows, вземи_аз
 
 аз = вземи_аз()
 водач_папка = os.getcwd() + '/водач'
@@ -105,15 +105,7 @@ def вземи_клони(шаблон='', local=True):
     except:
         return []
 
-def изпращай_промени(водачи, minute_branch, username, host, port):
-    log.info('Слушам и изпращам промени към водачите')
-    try:
-        glog.debug(git.branch(minute_branch))
-    except:
-        pass
-    glog.debug(git.checkout(minute_branch))
-    glog.debug(rush(аз, minute_branch))
-
+def check_authorized_keys(minute_branch):
     намерих_себе_си = False
     with open(os.environ['HOME'] + '/.ssh/id_rsa.pub') as f:
         my_key = f.read()
@@ -129,82 +121,61 @@ def изпращай_промени(водачи, minute_branch, username, host,
         glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към authorized_keys'))
         # Това обновява minute_branch от нашия водач, като обновява и него. По него ние получаваме съобщения от другите, затова е хубаво да се обновяваме. После обновения клон пращаме на сегашния водач
         glog.debug(rush(аз, minute_branch))
-        glog.debug(rush(водач, minute_branch))
 
+def check_fellows(minute_branch):
     водач_адрес = 'ssh://%s@%s:%s%s' % (username, host, port, водач_папка)
 
-    remove = []
-    for водач in водачи:
+    съучастници = get_fellows()
+    намерих_себе_си = False
+    намерих_себе_си_грешен_адрес = None
+    for index, съучастник in enumerate(съучастници):
+        if съучастник['id'] == аз:
+            if съучастник['remote'] == водач_адрес:
+                намерих_себе_си = True
+            else:
+                намерих_себе_си_грешен_адрес = index
+
+    if намерих_себе_си_грешен_адрес or not намерих_себе_си:
+        if намерих_себе_си_грешен_адрес:
+            log.info('Намерих грешен адрес за себе си в съучастниците')
+            съучастници.pop(намерих_себе_си_грешен_адрес)
+        else:
+            log.info('Не намерих себе си в съучастниците')
+                    
+        съучастници.append({'id': аз, 'remote': водач_адрес})
+        with open('съучастници', 'w') as f:
+            for с in съучастници:
+                f.write('%s %s\n' % (с['id'], с['remote']))
+        glog.debug(git.add('съучастници'))
+        if намерих_себе_си_грешен_адрес:
+            glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Обновявам адреса си в съучастници'))
+        else:
+            glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
+
         try:
-            glog.debug(git.fetch(водач, 'main'))
-        except Exception as e:
-            log.error(e)
-            log.error('Не успях да се свържа с водач ' + водач)
-            remove.append(водач)
-            continue
-
-        glog.debug(git.checkout('-B', водач+'-main', '--track', водач+'/main'))
-        съучастници = вземи_съучастници()
-        намерих_себе_си = False
-        намерих_себе_си_грешен_адрес = None
-        for index, съучастник in enumerate(съучастници):
-            if съучастник['id'] == аз:
-                if съучастник['remote'] == водач_адрес:
-                    намерих_себе_си = True
-                else:
-                    намерих_себе_си_грешен_адрес = index
-
-        if намерих_себе_си_грешен_адрес or not намерих_себе_си:
-            if намерих_себе_си_грешен_адрес:
-                log.info('Намерих грешен адрес за себе си в съучастниците на водач %s' % водач)
-                съучастници.pop(намерих_себе_си_грешен_адрес)
-            else:
-                log.info('Не намерих себе си в съучастниците на водач %s' % водач)
-                        
-            glog.debug(git.checkout(minute_branch))
-            съучастници.append({'id': аз, 'remote': водач_адрес})
-            with open('съучастници', 'w') as f:
-                for с in съучастници:
-                    f.write('%s %s\n' % (с['id'], с['remote']))
-            glog.debug(git.add('съучастници'))
-            if намерих_себе_си_грешен_адрес:
-                glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Обновявам адреса си в съучастници'))
-            else:
-                glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
-
-            try:
-                glog.debug(rush(аз, minute_branch))
-                glog.debug(rush(водач, minute_branch))
-            except sh.ErrorReturnCode_1 as e:
-                glog.exception(e)
-
-        glog.debug(git.checkout('main'))
-
-    if remove:
-        for r in remove:
-            водачи.remove(r)
-
-    # TODO още сега можем да видим че няма останали водачи и да поемем кормилото
-
-    git.checkout(minute_branch)
-    while сега().second < СЛУШАНЕ:
-        for водач in водачи:
-            try:
-                fetch = git.fetch(водач, minute_branch)
-                if 'Already up to date' not in fetch.stdout:
-                    log.info("Промяна")
-                    glog.debug(fetch)
-                    промяна = True
-                else:
-                    промяна = False
-            except:
-                log.error('Не успях да се свържа с водач ' + водач)
-
-        for водач in водачи:
             glog.debug(rush(аз, minute_branch))
-            glog.debug(rush(водач, minute_branch))
+        except sh.ErrorReturnCode_1 as e:
+            glog.exception(e)
 
-        time.sleep(1)
+def изпращай_промени(водачи, minute_branch, username, host, port):
+    log.info('Слушам и изпращам промени към водачите')
+    try:
+        glog.debug(git.branch(minute_branch))
+    except:
+        pass
+    glog.debug(git.checkout(minute_branch))
+    # правим rebase+push защото някой може вече да е добавил промени в този клон на remote аз-а
+    glog.debug(rush(аз, minute_branch))
+
+    check_authorized_keys(minute_branch)
+    check_fellows(minute_branch)
+
+    #TODO тегли промени от другите и ги добавяй към своя клон
+    for f in get_fellows():
+        pull = git.pull('--merge', '--no-edit', f['id'], minute_branch)
+        log.info(pull)
+
+    time.sleep(max(0, СЛУШАНЕ - сега().second))
 
 def сглоби_минута(minute_branch, аз):
     log.info('Сглобявам минута')
@@ -236,7 +207,7 @@ def сглоби_минута(minute_branch, аз):
 def гласувай(водачи, minute_branch, aз):
     log.info('Гласувам')
 
-    for fellow in вземи_съучастници():
+    for fellow in get_fellows():
         try:
             glog.debug(git.fetch(fellow['id'], minute_branch))
         except:
@@ -341,7 +312,7 @@ def минута(username, host, port):
         glog.debug(git.clone('.git', водач_папка, '--bare'))
 
     #TODO отдели
-    fellows = вземи_съучастници()
+    fellows = get_fellows()
     remotes = list(map(str.strip, git.remote().split('\n')))
     for fellow in fellows:
         remote = fellow['remote']
@@ -443,7 +414,7 @@ if __name__ == '__main__':
 
         relays = []
         remote_port = None
-        for съучастник in вземи_съучастници():
+        for съучастник in get_fellows():
             nlog.debug('Пробвам %s за реле' % съучастник)
             username, server, port = network.раздели_адрес(съучастник['remote'])
 

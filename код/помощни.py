@@ -23,7 +23,7 @@ def вземи_водачи():
   with open('водачи') as f:
     return list(map(lambda s: s.strip(), f.readlines()))
 
-def вземи_съучастници():
+def get_fellows():
   with open('съучастници') as f:
       return list(map(lambda s: dict(zip(полета, s.strip().split(' '))), f.readlines()))
 
