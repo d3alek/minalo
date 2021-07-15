@@ -236,7 +236,7 @@ def гласувай(водачи, minute_branch, aз):
     remote = best.split('/')[2]
     гласувах = False
     glog.debug(git.checkout(minute_branch))
-    glog.debug(git.pull(remote, minute_branch, '-X theirs'))
+    glog.debug(git.pull(remote, minute_branch, '-X=theirs'))
 
     while not гласувах:
         try:
@@ -387,6 +387,8 @@ def минута(username, host, port):
             import sys
             stored_exception = sys.exc_info()
             log.warning('Ще изляза в края на тази минута. Прекъсни отново за да изляза веднага')
+
+    #TODO if we have modified код since last loop, restart here
 
 # Промени в кода се приемат само с няколко (3) подписа на разработчици (такива които са правили вече промени по кода).
 
