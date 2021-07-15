@@ -164,8 +164,13 @@ def изпращай_промени(водачи, minute_branch, username, host,
     except:
         pass
     glog.debug(git.checkout(minute_branch))
-    # правим rebase+push защото някой може вече да е добавил промени в този клон на remote аз-а
-    glog.debug(rush(аз, minute_branch))
+    try:
+        glog.debug(git.pull(аз, minute_branch, '--ff-only'))
+    except:
+        # Най-вероятно го няма minute_branch
+        pass
+
+    git.push(аз, minute_branch)
 
     check_authorized_keys(minute_branch)
     check_fellows(minute_branch, username, host, port)
