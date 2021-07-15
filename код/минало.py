@@ -74,8 +74,8 @@ def rush(*args):
         pull = git.pull(*args, '--rebase')
         glog.info(pull)
     except Exception as e:
-        glog.error(e)
-    
+        glog.info('Failed to pull --rebase as part of rebase-and-push')
+        glog.info(e)
     while True:
         try:
             return git.push(*args)
