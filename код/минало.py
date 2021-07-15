@@ -73,7 +73,7 @@ def приготви():
 def rush(*args):
     try:
         pull = git.pull(*args, '--rebase')
-        glog.info(pull)
+        glog.debug(pull)
     except Exception as e:
         glog.info('Failed to pull --rebase as part of rebase-and-push')
         glog.info(e)
