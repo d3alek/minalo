@@ -181,7 +181,7 @@ def изпращай_промени(водачи, minute_branch, username, host,
             pull = git.pull('--no-rebase', '--no-edit', f['id'], minute_branch)
             log.info(pull)
         except Exception as e:
-            if 'CONFLICT' in e.message:
+            if 'CONFLICT' in str(e):
                 log.error('Неразрешим конфликт при дърпането на %s от %s' % (minute_branch, f['id']))
                 log.error(e)
                 git.merge('--abort')
