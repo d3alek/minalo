@@ -423,7 +423,7 @@ def get_branch():
 
 def update_state(state):
     global status_bar
-    status_bar.update(id=аз[:4], state=state, branch=get_branch(), head=get_head(),)
+    status_bar.update(id=аз[:7], state=state, branch=get_branch(), head=get_head(),)
 
 if __name__ == '__main__':
     import argparse
@@ -442,7 +442,7 @@ if __name__ == '__main__':
             status_format='{id}{fill}{branch}{fill}{head}{fill}{state}{fill}{elapsed}',
             color='bold_underline_bright_white_on_lightslategray',
             justify=enlighten.Justify.CENTER,
-            id=аз[:4],
+            id=аз[:7],
             branch=get_branch(),
             head=get_head(),
             state='-',
