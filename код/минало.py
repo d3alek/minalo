@@ -409,7 +409,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    pbar = enlighten.Counter(total=100, desc='Basic', unit='ticks')
+    manager = enlighten.get_manager()
+    pbar = manager.counter(total=100, desc='Basic', unit='ticks')
 
     #TODO премести в network.py
     relay_ports_range = [10000, 11000]
@@ -471,3 +472,4 @@ if __name__ == '__main__':
         ssh_port = args.ssh_port
 
     минута(args.ssh_user, ssh_host, ssh_port)
+    manager.stop()
