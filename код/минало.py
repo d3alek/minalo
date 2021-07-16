@@ -344,8 +344,11 @@ def минути(username, host, port):
         try:
             pull = git.pull('--ff-only', fellow['id'], 'main')
             glog.debug(pull)
-            if 'Already up to date' not in pull:
+            if 'Fast-forward' in pull:
                 log.info('Изтеглих най-новото състояние от ' + fellow['id'])
+                if 'код/' in pull:
+                    log.info('*'*3 + ' Промени в кода ' + '*'*3)
+                    restart()
             else:
                 log.info('Не взимам нищо ново от ' + fellow['id'])
         except Exception as e:
@@ -354,8 +357,14 @@ def минути(username, host, port):
 
     glog.debug(git.push(аз, 'main', '--force'))
 
+    previous_head = None
     while True:
         try:
+            head = get_head()
+            if previous_head and git('rev-list', previous_head, head, '--', 'код'):
+                log.info('*'*3 + ' Промени в кода ' + '*'*3)
+                restart()
+
             # Това е нужно защото може да сме влезли в цикъла след СЛУШАНЕ, тук имаме два варианта: 1/ да се преструваме че сме влезли по-рано, което правим по-долу, или 2/ да се включим само за частта, до която се е стигнало. TODO опитай вариант 2
             if сега().second > СЛУШАНЕ:
                 sleep(ПОЧИСТВАНЕ)
@@ -409,6 +418,8 @@ def минути(username, host, port):
             import sys
             stored_exception = sys.exc_info()
             log.warning('Ще изляза в края на тази минута. Прекъсни отново за да изляза веднага')
+        finally:
+            previous_head = head
 
     #TODO if we have modified код since last loop, restart here
 
