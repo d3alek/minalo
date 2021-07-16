@@ -43,9 +43,11 @@ git = sh2.git
 
 def sleep(seconds):
     global manager
-    manager.counter(total=seconds, desc='Sleep', unit='ticks') 
+    bar = manager.counter(total=seconds, desc='Sleep', unit='ticks') 
     for s in range(seconds):
         time.sleep(1)
+
+    bar.close()
 
 def приготви():
     glog.debug(git.checkout('main'))
@@ -196,7 +198,7 @@ def изпращай_промени(водачи, minute_branch, username, host,
             else:
                 log.error('Не успях да дръпна %s от %s' % (minute_branch, f['id']))
 
-    time.sleep(max(0, СЛУШАНЕ - сега().second))
+    sleep(max(0, СЛУШАНЕ - сега().second))
 
 def сглоби_минута(minute_branch, аз):
     log.info('Сглобявам минута')
@@ -265,7 +267,7 @@ def гласувай(водачи, minute_branch, aз):
             glog.debug(git.reset('--hard', 'HEAD~1'))
             glog.debug(git.pull(remote, minute_branch))
 
-    time.sleep(max(0, ГЛАСУВАНЕ - сега().second))
+    sleep(max(0, ГЛАСУВАНЕ - сега().second))
 
 def приеми_минута(водачи, minute_branch):
     log.info('Приемам минута')
@@ -369,7 +371,7 @@ def минута(username, host, port, status):
             # какви са последиците че всички правят това?
             status.update(state='Сглобявам')
             сглоби_минута(minute_branch, аз)
-            time.sleep(max(0, СГЛОБЯВАНЕ - сега().second))
+            sleep(max(0, СГЛОБЯВАНЕ - сега().second))
 
             status.update(state='Гласувам')
             гласувай(водачи, minute_branch, аз)
@@ -379,7 +381,7 @@ def минута(username, host, port, status):
 
             if stored_exception:
                 break
-            time.sleep(max(0, ПРИЕМАНЕ - сега().second))
+            sleep(max(0, ПРИЕМАНЕ - сега().second))
 
             status.update(state='Почиствам')
             log.info('Почиствам')
@@ -398,7 +400,7 @@ def минута(username, host, port, status):
                 if клон != 'refs/heads/main':
                     клон = клон.split('refs/heads/')[1]
                     glog.debug(git.branch('-D', клон))
-            time.sleep(max(0, ПОЧИСТВАНЕ - сега().second))
+            sleep(max(0, ПОЧИСТВАНЕ - сега().second))
         except KeyboardInterrupt:
             if stored_exception:
                 raise 
