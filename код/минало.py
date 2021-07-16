@@ -41,6 +41,12 @@ glog.addHandler(ch)
 sh2 = sh(_err_to_out=True, _truncate_exc=False)
 git = sh2.git
 
+def sleep(seconds):
+    global manager
+    manager.counter(total=seconds, desc='Sleep', unit='ticks') 
+    for s in range(seconds):
+        time.sleep(1)
+
 def приготви():
     glog.debug(git.checkout('main'))
     modified = []
@@ -302,7 +308,7 @@ def am_leader(leaders):
 ## 3.1 Когато има много неразбирателство, увеличи броя водачи като добавиш себе си към водачите
 ## 3.2 Когато няма кандидат минута, всеки поема водачеството и прави такава.
 ## 4. Всички приемат минутата на водача с най-много гласове. Тоест, комити.
-def минута(username, host, port, manager, status):
+def минута(username, host, port, status):
     приготви()
     stored_exception = None
 
@@ -361,6 +367,7 @@ def минута(username, host, port, manager, status):
             изпращай_промени(водачи, minute_branch, username, host, port)
 
             # какви са последиците че всички правят това?
+            status.update(state='Сглобявам')
             сглоби_минута(minute_branch, аз)
             time.sleep(max(0, СГЛОБЯВАНЕ - сега().second))
 
@@ -413,6 +420,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    global manager
     manager = enlighten.get_manager()
     status = manager.status_bar(
             status_format='Минало{fill}State: {state}{fill}{elapsed}',
@@ -492,5 +500,5 @@ if __name__ == '__main__':
 
     status.update(state='*')
 
-    минута(args.ssh_user, ssh_host, ssh_port, manager, status)
+    минута(args.ssh_user, ssh_host, ssh_port, status)
     manager.stop()
