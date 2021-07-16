@@ -8,8 +8,8 @@ counter = threading.Semaphore()
 
 network_status = None
 
-def update_status(status, state):
-    status.update(state=state, theads=counter._value)
+def update_status(status, *args, **kwargs):
+    status.update(*args, **kwargs, theads=counter._value)
 
 def handler(chan, host, port, status):
     with counter:
@@ -57,7 +57,7 @@ def reverse_forward_loop(transport, remote_host, remote_port, status):
 
 def reverse_forward_tunnel(server, server_port, remote_host, remote_port, transport, status):
 
-    update_status(status, 'През реле ' + server)
+    update_status(status, relay=server)
     transport.request_port_forward("", server_port)
     thr = threading.Thread(target=reverse_forward_loop, args=(transport, remote_host, remote_port, status))
     thr.daemon = True
