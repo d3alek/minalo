@@ -19,10 +19,6 @@ def минута_от_деня():
 
 полета = ['id', 'remote']
 
-def вземи_водачи():
-  with open('водачи') as f:
-    return list(map(lambda s: s.strip(), f.readlines()))
-
 def get_fellows():
   with open('съучастници') as f:
       return list(map(lambda s: dict(zip(полета, s.strip().split(' '))), f.readlines()))
@@ -30,14 +26,6 @@ def get_fellows():
 def вземи_гласували():
   with open('гласове') as f:
       return list(map(lambda s: s.strip(), f.readlines()))
-
-def изчисли_водачи():
-  гласували = вземи_гласували()
-  брой = len(гласували)
-  if брой == 0:
-      return []
-  номер = минута_от_деня() % брой
-  return [гласували[номер]]
 
 def calculate_minute_branch(t=None):
   if t == None:

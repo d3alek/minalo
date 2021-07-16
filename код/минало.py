@@ -4,7 +4,7 @@ import datetime
 import time
 import sh
 import os
-from помощни import calculate_minute_branch, СЛУШАНЕ, сега, вземи_водачи, изчисли_водачи, get_fellows, вземи_аз
+from помощни import calculate_minute_branch, СЛУШАНЕ, сега, get_fellows, вземи_аз
 
 аз = вземи_аз()
 водач_папка = os.getcwd() + '/водач'
@@ -71,8 +71,6 @@ def приготви():
         status, file_name = status_line.split()
         if status == 'M':
             modified.append(file_name)
-            if 'код/' in file_name:
-                should_restart = True
         elif status == '??':
             untracked.append(file_name)
 
@@ -80,8 +78,6 @@ def приготви():
         glog.debug(git.add(m))
 
     glog.info(git.commit('--gpg-sign='+аз, '-m', 'Автоматично запазвам локално променени %s' % modified))
-    if should_restart:
-        restart()
 #
 #    git.checkout('main')
 #    git.checkout('-b', 'untracked-'+време_клон())
@@ -181,7 +177,7 @@ def check_fellows(minute_branch, username, host, port):
         except sh.ErrorReturnCode_1 as e:
             glog.exception(e)
 
-def слушай_промени(водачи, minute_branch, username, host, port):
+def слушай_промени(minute_branch, username, host, port):
     log.info('Слушам и изпращам промени')
     try:
         glog.debug(git.branch(minute_branch))
@@ -224,21 +220,17 @@ def сглоби_минута(minute_branch, аз):
     with open('време', 'w') as f:
         f.write(време)
 
-    with open('водачи', 'w') as f:
-        f.write('\n'.join(map(lambda d: "%s" % d, изчисли_водачи()))) # това трябва да стане преди да нулираме гласове по-долу
-
     with open('гласове', 'w') as f:
         f.write('')
 
     glog.debug(git.add('време'))
     glog.debug(git.add('гласове'))
-    glog.debug(git.add('водачи'))
     
     glog.debug(git.commit('--gpg-sign='+аз, '-m', 'време ' + време))
 
     glog.debug(git.push(аз, minute_branch))
 
-def гласувай(водачи, minute_branch, aз):
+def гласувай(minute_branch, aз):
     log.info('Гласувам')
 
     for fellow in get_fellows():
@@ -283,7 +275,7 @@ def гласувай(водачи, minute_branch, aз):
 
     sleep(max(0, ГЛАСУВАНЕ - сега().second))
 
-def приеми_минута(водачи, minute_branch):
+def приеми_минута(minute_branch):
     log.info('Приемам минута')
 
     best = None
@@ -374,7 +366,7 @@ def минути(username, host, port):
 
             git.checkout('main')
 
-            слушай_промени(водачи, minute_branch, username, host, port)
+            слушай_промени(minute_branch, username, host, port)
             sleep(СЛУШАНЕ)
 
             # какви са последиците че всички правят това?
@@ -383,10 +375,10 @@ def минути(username, host, port):
             sleep(СГЛОБЯВАНЕ)
 
             update_state('Гласувам')
-            гласувай(водачи, minute_branch, аз)
+            гласувай(minute_branch, аз)
 
             update_state('Приемам')
-            приеми_минута(водачи, minute_branch)
+            приеми_минута(minute_branch)
 
             if stored_exception:
                 break
