@@ -26,7 +26,7 @@ glog.setLevel(logging.INFO)
 ch = colorlog.StreamHandler()
 ch.setLevel(logging.DEBUG)
 ch.setFormatter(colorlog.ColoredFormatter(
-    '%(log_color)s%(levelname)s:%(name)s:'+аз[:4]+':%(message)s'))
+    '%(log_color)s%(asctime)s:%(levelname)s:%(name)s:%(message)s'))
 
 log.addHandler(ch)
 nlog.addHandler(ch)
@@ -423,7 +423,7 @@ def get_branch():
 
 def update_state(state):
     global status_bar
-    status_bar.update(state=state, branch=get_branch(), head=get_head(),)
+    status_bar.update(id=аз, state=state, branch=get_branch(), head=get_head(),)
 
 if __name__ == '__main__':
     import argparse
@@ -439,9 +439,10 @@ if __name__ == '__main__':
     global status_bar
     manager = enlighten.get_manager()
     status_bar = manager.status_bar(
-            status_format='Минало{fill}{branch}{fill}{head}{fill}{state}{fill}{elapsed}',
+            status_format='{id}{fill}{branch}{fill}{head}{fill}{state}{fill}{elapsed}',
             color='bold_underline_bright_white_on_lightslategray',
             justify=enlighten.Justify.CENTER,
+            id=аз,
             branch=get_branch(),
             head=get_head(),
             state='-',
