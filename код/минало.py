@@ -422,9 +422,15 @@ def get_head():
 def get_branch():
     return git.branch('--show-current').strip()
 
+def get_votes():
+    with open('гласове', 'r') as f:
+        гласове = f.read().strip().split('\n')
+
+    return гласове
+
 def update_state(state):
     global status_bar
-    status_bar.update(id=аз[:7], state=state, branch=get_branch(), head=get_head(),)
+    status_bar.update(id=аз[:7], state=state, branch=get_branch(), head=get_head(),votes=len(get_votes()))
 
 if __name__ == '__main__':
     import argparse
@@ -440,12 +446,13 @@ if __name__ == '__main__':
     global status_bar
     manager = enlighten.get_manager()
     status_bar = manager.status_bar(
-            status_format='{id}{fill}{branch}{fill}{head}{fill}{state}{fill}{elapsed}',
+            status_format='{id}:{branch}/{head}({votes}){fill}{state}{fill}{elapsed}',
             color='bold_underline_bright_white_on_lightslategray',
             justify=enlighten.Justify.CENTER,
             id=аз[:7],
             branch=get_branch(),
             head=get_head(),
+            votes=0,
             state='-',
             autorefresh=True,
             min_delta=0.5)
