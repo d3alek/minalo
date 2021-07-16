@@ -467,7 +467,7 @@ if __name__ == '__main__':
             status_format='{address}{fill}{state}{fill}{threads}',
             color='bold_underline_bright_white_on_lightslategray',
             justify=enlighten.Justify.CENTER,
-            state='Свързване',
+            state='...',
             address='Undefined',
             threads='0',
             autorefresh=True,
