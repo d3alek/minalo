@@ -414,10 +414,10 @@ def минута(username, host, port, status):
 # Промени в кода се приемат само с няколко (3) подписа на разработчици (такива които са правили вече промени по кода).
 
 def get_head():
-    return git('rev-parse', 'HEAD')
+    return git('rev-parse', 'HEAD').strip()
 
 def get_branch():
-    return git.branch('--show-current')
+    return git.branch('--show-current').strip()
 
 if __name__ == '__main__':
     import argparse
