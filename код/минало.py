@@ -36,7 +36,7 @@ glog.addHandler(ch)
 # СЛУШАНЕ идва от помощни.py
 СГЛОБЯВАНЕ = 35
 ГЛАСУВАНЕ = 43
-ПРИЕМАНЕ = 51
+ПРИЕМАНЕ = 55
 ПОЧИСТВАНЕ = 60
 
 sh2 = sh(_err_to_out=True, _truncate_exc=False)
@@ -52,6 +52,12 @@ def sleep(until):
 
     bar.close()
 
+def restart():
+    import sys
+    log.error('*' * 5 + ' Restarting ' + '*' * 5)
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
+
 def приготви():
     glog.debug(git.checkout('main'))
     modified = []
@@ -60,10 +66,13 @@ def приготви():
     if not status:
         return
     glog.info(status)
+    should_restart = False
     for status_line in status.strip().split('\n'):
         status, file_name = status_line.split()
         if status == 'M':
             modified.append(file_name)
+            if 'код/' in file_name:
+                should_restart = True
         elif status == '??':
             untracked.append(file_name)
 
@@ -71,6 +80,8 @@ def приготви():
         glog.debug(git.add(m))
 
     glog.info(git.commit('--gpg-sign='+аз, '-m', 'Автоматично запазвам локално променени %s' % modified))
+    if should_restart:
+        restart()
 #
 #    git.checkout('main')
 #    git.checkout('-b', 'untracked-'+време_клон())
@@ -299,12 +310,6 @@ def приеми_минута(водачи, minute_branch):
     glog.debug(git.reset(best, '--hard'))
     git.push(аз, 'main', '--force')
 
-def am_leader(leaders):
-    leader = False
-    for l in leaders:
-        leader = leader or l == аз
-
-    return leader
 # План
 ## 0. Теглим main от някой от съучастниците които са на линия.
 ## 1. Всички промени се пращат към водачите до 30тата секунда от минутата във един и същ клон (зависещ от минутата). Този който е пратил промени следва да ги наблюдава - комита ако влезе в main, всичко точно, ако не, следва да се повтори следващата минута ( Водачите имат отговорност да синхронизират промените по между си.)
@@ -314,8 +319,8 @@ def am_leader(leaders):
 ## 3.2 Когато няма кандидат минута, всеки поема водачеството и прави такава.
 ## 4. Всички приемат минутата на водача с най-много гласове. Тоест, комити.
 def минути(username, host, port):
-    приготви()
     stored_exception = None
+    приготви()
 
     glog.debug(git.checkout('main'))
     #log.info('Взимаме от origin')
@@ -356,14 +361,7 @@ def минути(username, host, port):
                 sleep(ПОЧИСТВАНЕ)
 
             update_state('Слушам')
-            minute_branch = calculate_minute_branch(сега())
-
-            водачи = вземи_водачи()
-
-            if am_leader(водачи):
-                log.info('Водач съм')
-            else:
-                log.info('Не съм водач. Водачи: %s' % водачи)
+            minute_branch = calculate_minute_branch()
 
             git.checkout('main')
 
@@ -387,21 +385,23 @@ def минути(username, host, port):
 
             update_state('Почиствам')
             log.info('Почиствам')
-            if am_leader(водачи):
-                клони = вземи_клони(local=False)
-                for клон in клони:
-                    шаблон = 'refs/remotes/%s/' % аз
-                    if шаблон in клон and клон != 'refs/remotes/%s/main' % аз:
 
-                        log.debug(клон)
-                        клон = клон.split(шаблон)[1]
-                        glog.debug(git.push(аз, '--delete', клон))
+            клони = вземи_клони(local=False)
+            for клон in клони:
+                шаблон = 'refs/remotes/%s/' % аз
+                if шаблон in клон and клон != 'refs/remotes/%s/main' % аз:
+
+                    log.debug(клон)
+                    клон = клон.split(шаблон)[1]
+                    glog.debug(git.push(аз, '--delete', клон))
 
             клони = вземи_клони(local=True)
             for клон in клони:
                 if клон != 'refs/heads/main':
                     клон = клон.split('refs/heads/')[1]
                     glog.debug(git.branch('-D', клон))
+
+            приготви()
             sleep(ПОЧИСТВАНЕ)
         except KeyboardInterrupt:
             if stored_exception:
