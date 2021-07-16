@@ -302,7 +302,7 @@ def am_leader(leaders):
 ## 3.1 Когато има много неразбирателство, увеличи броя водачи като добавиш себе си към водачите
 ## 3.2 Когато няма кандидат минута, всеки поема водачеството и прави такава.
 ## 4. Всички приемат минутата на водача с най-много гласове. Тоест, комити.
-def минута(username, host, port):
+def минута(username, host, port, manager, status):
     приготви()
     stored_exception = None
 
@@ -346,6 +346,7 @@ def минута(username, host, port):
             else:
                 t = сега()
 
+            status.update(state='Слушам')
             minute_branch = calculate_minute_branch(t)
 
             водачи = вземи_водачи()
@@ -363,14 +364,17 @@ def минута(username, host, port):
             сглоби_минута(minute_branch, аз)
             time.sleep(max(0, СГЛОБЯВАНЕ - сега().second))
 
+            status.update(state='Гласувам')
             гласувай(водачи, minute_branch, аз)
 
+            status.update(state='Приемам')
             приеми_минута(водачи, minute_branch)
 
             if stored_exception:
                 break
             time.sleep(max(0, ПРИЕМАНЕ - сега().second))
 
+            status.update(state='Почиствам')
             log.info('Почиствам')
             if am_leader(водачи):
                 клони = вземи_клони(local=False)
@@ -410,12 +414,25 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     manager = enlighten.get_manager()
-    pbar = manager.counter(total=100, desc='Basic', unit='ticks')
+    status = manager.status_bar(
+            status_format='Минало{fill}State: {state}{fill}{elapsed}',
+            color='bold_underline_bright_white_on_lightslategray',
+            justify=enlighten.Justify.CENTER, state='-',
+            autorefresh=True,
+            min_delta=0.5)
+
+    network_status = manager.status_bar(
+            status_format='Мрежа{fill}State: {state}{fill}{elapsed}',
+            color='bold_underline_bright_white_on_lightslategray',
+            justify=enlighten.Justify.CENTER, state='Свързване',
+            autorefresh=True,
+            min_delta=0.5)
 
     #TODO премести в network.py
     relay_ports_range = [10000, 11000]
  
     if not args.ssh_host:
+        network_status.update(state='Търся реле')
         client = paramiko.SSHClient()
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.WarningPolicy())
@@ -436,6 +453,7 @@ if __name__ == '__main__':
         if not relays:
             raise RuntimeError("Нямам реално IP, но нямам и реле")
 
+        network_status.update(state='Свързвам се с реле ' + server)
         username, server, port = relays[0] #TODO random or iterate over all
 
         nlog.debug("Connecting to ssh host %s@%s:%d ..." % (username, server, port))
@@ -454,6 +472,7 @@ if __name__ == '__main__':
             sys.exit(1)
 
 
+        network_status.update(state='През реле ' + server)
         if not remote_port:
             import random 
             remote_port = random.randint(*relay_ports_range)
@@ -462,15 +481,16 @@ if __name__ == '__main__':
             "Now forwarding remote port %d to %s:%d ..."
             % (remote_port, 'localhost', args.ssh_port)
         )
-        pbar.update()
 
         network.reverse_forward_tunnel(
-            remote_port, 'localhost', args.ssh_port, client.get_transport())
+            remote_port, 'localhost', args.ssh_port, client.get_transport(), network_status)
         ssh_host = server
         ssh_port = remote_port
     else:
         ssh_host = args.ssh_host
         ssh_port = args.ssh_port
 
-    минута(args.ssh_user, ssh_host, ssh_port)
+    status.update(state='*')
+
+    минута(args.ssh_user, ssh_host, ssh_port, manager, status)
     manager.stop()

@@ -5,7 +5,7 @@ import threading
 
 nlog = colorlog.getLogger('мрежа')
 
-def handler(chan, host, port):
+def handler(chan, host, port, status):
     sock = socket.socket()
     try:
         sock.connect((host, port))
@@ -13,6 +13,8 @@ def handler(chan, host, port):
         nlog.debug("Forwarding request to %s:%d failed: %r" % (host, port, e))
         return
 
+    status.update(state="%r -> %r -> %r"
+        % (chan.origin_addr, chan.getpeername(), (host, port)))
     nlog.debug(
         "Connected!  Tunnel open %r -> %r -> %r"
         % (chan.origin_addr, chan.getpeername(), (host, port))
@@ -32,21 +34,23 @@ def handler(chan, host, port):
     chan.close()
     sock.close()
     nlog.debug("Tunnel closed from %r" % (chan.origin_addr,))
+    status.update('Closed from %r' % (chan.origin_addr,))
 
-def reverse_forward_loop(transport, remote_host, remote_port):
+def reverse_forward_loop(transport, remote_host, remote_port, status):
     while True:
         chan = transport.accept(1000)
+        status.update(state='Канал')
         if chan is None:
             continue
         thr = threading.Thread(
-            target=handler, args=(chan, remote_host, remote_port)
+            target=handler, args=(chan, remote_host, remote_port, status)
         )
         thr.daemon = True
         thr.start()
 
-def reverse_forward_tunnel(server_port, remote_host, remote_port, transport):
+def reverse_forward_tunnel(server_port, remote_host, remote_port, transport, status):
     transport.request_port_forward("", server_port)
-    thr = threading.Thread(target=reverse_forward_loop, args=(transport, remote_host, remote_port))
+    thr = threading.Thread(target=reverse_forward_loop, args=(transport, remote_host, remote_port, status))
     thr.daemon = True
     thr.start()
 
