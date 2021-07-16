@@ -20,7 +20,7 @@ def handler(chan, host, port, status):
             nlog.debug("Forwarding request to %s:%d failed: %r" % (host, port, e))
             return
 
-        update_status(status, "%r -> %r -> %r"
+        update_status(status, state="%r -> %r -> %r"
             % (chan.origin_addr, chan.getpeername(), (host, port)))
         nlog.debug(
             "Connected!  Tunnel open %r -> %r -> %r"
@@ -41,7 +41,7 @@ def handler(chan, host, port, status):
         chan.close()
         sock.close()
         nlog.debug("Tunnel closed from %r" % (chan.origin_addr,))
-        update_status(status, 'Closed from %r' % (chan.origin_addr,))
+        #update_status(status, state = 'Closed from %r' % (chan.origin_addr,))
 
 def reverse_forward_loop(transport, remote_host, remote_port, status):
     while True:
@@ -57,7 +57,7 @@ def reverse_forward_loop(transport, remote_host, remote_port, status):
 
 def reverse_forward_tunnel(server, server_port, remote_host, remote_port, transport, status):
 
-    update_status(status, relay=server)
+    update_status(status, address='Relay ' + server)
     transport.request_port_forward("", server_port)
     thr = threading.Thread(target=reverse_forward_loop, args=(transport, remote_host, remote_port, status))
     thr.daemon = True

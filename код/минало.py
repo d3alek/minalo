@@ -288,6 +288,8 @@ def приеми_минута(minute_branch):
         except Exception as e:
             if 'Could not read from remote repository.' in str(e):
                 log.error('Не успях да се свържа с ' + f['id'])
+            if "couldn't find remote ref" in str(e):
+                log.error('Не успях да се намеря клон %s в %s' % (minute_branch, f['id']))
             else:
                 log.error(e)
 
@@ -462,10 +464,11 @@ if __name__ == '__main__':
             leave=False)
 
     network_status = manager.status_bar(
-            status_format='{threads}{fill}{state}{fill}',
+            status_format='{address}{threads}{fill}{state}{fill}',
             color='bold_underline_bright_white_on_lightslategray',
             justify=enlighten.Justify.CENTER,
             state='Свързване',
+            address='Undefined',
             threads='0',
             autorefresh=True,
             min_delta=0.5,
