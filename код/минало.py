@@ -26,7 +26,8 @@ glog.setLevel(logging.INFO)
 ch = colorlog.StreamHandler()
 ch.setLevel(logging.DEBUG)
 ch.setFormatter(colorlog.ColoredFormatter(
-    '%(log_color)s%(asctime)s:%(levelname)s:%(name)s:%(message)s'))
+    '%(log_color)s%(asctime)s:%(levelname)s:%(name)s:%(message)s',
+    '%H:%M:%S,%ms'))
 
 log.addHandler(ch)
 nlog.addHandler(ch)
