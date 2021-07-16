@@ -250,8 +250,10 @@ def гласувай(водачи, minute_branch, aз):
 
     log.info('Гласувам за ' + best)
     remote = best.split('/')[2]
-    гласувах = False
     glog.debug(git.checkout(minute_branch))
+    if remote != аз:
+        git.reset('HEAD~1', '--hard') # махаме нашия време комит
+    гласувах = False
     glog.debug(git.pull('--no-edit', '-s', 'recursive', '-X', 'theirs', remote, minute_branch))
 
     while not гласувах:
