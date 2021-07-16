@@ -43,6 +43,8 @@ sh2 = sh(_err_to_out=True, _truncate_exc=False)
 git = sh2.git
 
 def sleep(until):
+    # TODO какво правим като сега().second превърти след until?
+    # TODO запазвай предишния state и сравнявай дали сега().second е между този и предишния
     seconds = max(0, until - сега().second)
     global manager
     bar = manager.counter(total=seconds, desc='Sleep', unit='ticks', leave=False) 
