@@ -42,7 +42,8 @@ glog.addHandler(ch)
 sh2 = sh(_err_to_out=True, _truncate_exc=False)
 git = sh2.git
 
-def sleep(seconds):
+def sleep(until):
+    seconds = max(0, until - сега().second)
     global manager
     bar = manager.counter(total=seconds, desc='Sleep', unit='ticks', leave=False) 
     for s in range(seconds):
@@ -169,7 +170,7 @@ def check_fellows(minute_branch, username, host, port):
         except sh.ErrorReturnCode_1 as e:
             glog.exception(e)
 
-def изпращай_промени(водачи, minute_branch, username, host, port):
+def слушай_промени(водачи, minute_branch, username, host, port):
     log.info('Слушам и изпращам промени')
     try:
         glog.debug(git.branch(minute_branch))
@@ -198,8 +199,6 @@ def изпращай_промени(водачи, minute_branch, username, host,
                 git.merge('--abort')
             else:
                 log.error('Не успях да дръпна %s от %s' % (minute_branch, f['id']))
-
-    sleep(max(0, СЛУШАНЕ - сега().second))
 
 def сглоби_минута(minute_branch, аз):
     log.info('Сглобявам минута')
@@ -314,7 +313,7 @@ def am_leader(leaders):
 ## 3.1 Когато има много неразбирателство, увеличи броя водачи като добавиш себе си към водачите
 ## 3.2 Когато няма кандидат минута, всеки поема водачеството и прави такава.
 ## 4. Всички приемат минутата на водача с най-много гласове. Тоест, комити.
-def минута(username, host, port):
+def минути(username, host, port):
     приготви()
     stored_exception = None
 
@@ -354,9 +353,7 @@ def минута(username, host, port):
         try:
             # Това е нужно защото може да сме влезли в цикъла след СЛУШАНЕ, тук имаме два варианта: 1/ да се преструваме че сме влезли по-рано, което правим по-долу, или 2/ да се включим само за частта, до която се е стигнало. TODO опитай вариант 2
             if сега().second > СЛУШАНЕ:
-                t = сега() - datetime.timedelta(minutes=1)
-            else:
-                t = сега()
+                sleep(ПОЧИСТВАНЕ)
 
             update_state('Слушам')
             minute_branch = calculate_minute_branch(t)
@@ -370,12 +367,13 @@ def минута(username, host, port):
 
             git.checkout('main')
 
-            изпращай_промени(водачи, minute_branch, username, host, port)
+            слушай_промени(водачи, minute_branch, username, host, port)
+            sleep(СЛУШАНЕ)
 
             # какви са последиците че всички правят това?
             update_state('Сглобявам')
             сглоби_минута(minute_branch, аз)
-            sleep(max(0, СГЛОБЯВАНЕ - сега().second))
+            sleep(СГЛОБЯВАНЕ)
 
             update_state('Гласувам')
             гласувай(водачи, minute_branch, аз)
@@ -385,7 +383,7 @@ def минута(username, host, port):
 
             if stored_exception:
                 break
-            sleep(max(0, ПРИЕМАНЕ - сега().second))
+            sleep(ПРИЕМАНЕ)
 
             update_state('Почиствам')
             log.info('Почиствам')
@@ -404,7 +402,7 @@ def минута(username, host, port):
                 if клон != 'refs/heads/main':
                     клон = клон.split('refs/heads/')[1]
                     glog.debug(git.branch('-D', клон))
-            sleep(max(0, ПОЧИСТВАНЕ - сега().second))
+            sleep(ПОЧИСТВАНЕ)
         except KeyboardInterrupt:
             if stored_exception:
                 raise 
@@ -528,5 +526,7 @@ if __name__ == '__main__':
 
     update_state('*')
 
-    минута(args.ssh_user, ssh_host, ssh_port)
-    manager.stop()
+    try:
+        минути(args.ssh_user, ssh_host, ssh_port)
+    finally:
+        manager.stop()
