@@ -414,7 +414,7 @@ def минута(username, host, port, status):
 # Промени в кода се приемат само с няколко (3) подписа на разработчици (такива които са правили вече промени по кода).
 
 def get_head():
-    return git('rev-parse', 'HEAD').strip()
+    return git('rev-parse', '--short', 'HEAD').strip()
 
 def get_branch():
     return git.branch('--show-current').strip()
@@ -432,7 +432,7 @@ if __name__ == '__main__':
     global manager
     manager = enlighten.get_manager()
     status = manager.status_bar(
-            status_format='Минало{branch}{head}{fill}{state}{fill}{elapsed}',
+            status_format='Минало{fill}{branch}{fill}{head}{fill}{state}{fill}{elapsed}',
             color='bold_underline_bright_white_on_lightslategray',
             justify=enlighten.Justify.CENTER,
             branch=get_branch(),
