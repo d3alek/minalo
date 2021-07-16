@@ -4,37 +4,44 @@ import colorlog
 import threading
 
 nlog = colorlog.getLogger('мрежа')
+counter = threading.Semaphore()
+
+network_status = None
+
+def update_status(status, state):
+    status.update(state=state, theads=counter._value)
 
 def handler(chan, host, port, status):
-    sock = socket.socket()
-    try:
-        sock.connect((host, port))
-    except Exception as e:
-        nlog.debug("Forwarding request to %s:%d failed: %r" % (host, port, e))
-        return
+    with counter:
+        sock = socket.socket()
+        try:
+            sock.connect((host, port))
+        except Exception as e:
+            nlog.debug("Forwarding request to %s:%d failed: %r" % (host, port, e))
+            return
 
-    status.update(state="%r -> %r -> %r"
-        % (chan.origin_addr, chan.getpeername(), (host, port)))
-    nlog.debug(
-        "Connected!  Tunnel open %r -> %r -> %r"
-        % (chan.origin_addr, chan.getpeername(), (host, port))
-    )
-    while True:
-        r, w, x = select.select([sock, chan], [], [])
-        if sock in r:
-            data = sock.recv(1024)
-            if len(data) == 0:
-                break
-            chan.send(data)
-        if chan in r:
-            data = chan.recv(1024)
-            if len(data) == 0:
-                break
-            sock.send(data)
-    chan.close()
-    sock.close()
-    nlog.debug("Tunnel closed from %r" % (chan.origin_addr,))
-    status.update('Closed from %r' % (chan.origin_addr,))
+        update_status(status, "%r -> %r -> %r"
+            % (chan.origin_addr, chan.getpeername(), (host, port)))
+        nlog.debug(
+            "Connected!  Tunnel open %r -> %r -> %r"
+            % (chan.origin_addr, chan.getpeername(), (host, port))
+        )
+        while True:
+            r, w, x = select.select([sock, chan], [], [])
+            if sock in r:
+                data = sock.recv(1024)
+                if len(data) == 0:
+                    break
+                chan.send(data)
+            if chan in r:
+                data = chan.recv(1024)
+                if len(data) == 0:
+                    break
+                sock.send(data)
+        chan.close()
+        sock.close()
+        nlog.debug("Tunnel closed from %r" % (chan.origin_addr,))
+        update_status(status, 'Closed from %r' % (chan.origin_addr,))
 
 def reverse_forward_loop(transport, remote_host, remote_port, status):
     while True:
@@ -48,7 +55,9 @@ def reverse_forward_loop(transport, remote_host, remote_port, status):
         thr.daemon = True
         thr.start()
 
-def reverse_forward_tunnel(server_port, remote_host, remote_port, transport, status):
+def reverse_forward_tunnel(server, server_port, remote_host, remote_port, transport, status):
+
+    update_status(status, 'През реле ' + server)
     transport.request_port_forward("", server_port)
     thr = threading.Thread(target=reverse_forward_loop, args=(transport, remote_host, remote_port, status))
     thr.daemon = True

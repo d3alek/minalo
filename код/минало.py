@@ -462,9 +462,11 @@ if __name__ == '__main__':
             leave=False)
 
     network_status = manager.status_bar(
-            status_format='Мрежа{fill}State: {state}{fill}{elapsed}',
+            status_format='{threads}{fill}{state}{fill}',
             color='bold_underline_bright_white_on_lightslategray',
-            justify=enlighten.Justify.CENTER, state='Свързване',
+            justify=enlighten.Justify.CENTER,
+            state='Свързване',
+            threads='0',
             autorefresh=True,
             min_delta=0.5,
             leave=False)
@@ -473,7 +475,7 @@ if __name__ == '__main__':
     relay_ports_range = [10000, 11000]
  
     if not args.ssh_host:
-        network_status.update(state='Търся реле')
+        #network_status.update(state='Търся реле')
         client = paramiko.SSHClient()
         client.load_system_host_keys()
         client.set_missing_host_key_policy(paramiko.WarningPolicy())
@@ -494,7 +496,7 @@ if __name__ == '__main__':
         if not relays:
             raise RuntimeError("Нямам реално IP, но нямам и реле")
 
-        network_status.update(state='Свързвам се с реле ' + server)
+        #network_status.update(state='Свързвам се с реле ' + server)
         username, server, port = relays[0] #TODO random or iterate over all
 
         nlog.debug("Connecting to ssh host %s@%s:%d ..." % (username, server, port))
@@ -513,7 +515,6 @@ if __name__ == '__main__':
             sys.exit(1)
 
 
-        network_status.update(state='През реле ' + server)
         if not remote_port:
             import random 
             remote_port = random.randint(*relay_ports_range)
@@ -524,7 +525,7 @@ if __name__ == '__main__':
         )
 
         network.reverse_forward_tunnel(
-            remote_port, 'localhost', args.ssh_port, client.get_transport(), network_status)
+            server, remote_port, 'localhost', args.ssh_port, client.get_transport(), network_status)
         ssh_host = server
         ssh_port = remote_port
     else:
