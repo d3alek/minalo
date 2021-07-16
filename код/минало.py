@@ -286,8 +286,10 @@ def приеми_минута(minute_branch):
             glog.debug(git.fetch(f['id'], minute_branch))
             log.info('Изтеглих последни промени от ' + f['id'])
         except Exception as e:
-            log.error(e)
-            log.error('Не успях да се свържа с ' + f['id'])
+            if 'Could not read from remote repository.' in str(e):
+                log.error('Не успях да се свържа с ' + f['id'])
+            else:
+                log.error(e)
 
     клони = вземи_клони(шаблон=minute_branch, local=False)
 
