@@ -311,7 +311,7 @@ def am_leader(leaders):
 ## 3.1 Когато има много неразбирателство, увеличи броя водачи като добавиш себе си към водачите
 ## 3.2 Когато няма кандидат минута, всеки поема водачеството и прави такава.
 ## 4. Всички приемат минутата на водача с най-много гласове. Тоест, комити.
-def минута(username, host, port, status):
+def минута(username, host, port):
     приготви()
     stored_exception = None
 
@@ -355,7 +355,7 @@ def минута(username, host, port, status):
             else:
                 t = сега()
 
-            status.update(state='Слушам')
+            update_state('Слушам')
             minute_branch = calculate_minute_branch(t)
 
             водачи = вземи_водачи()
@@ -370,21 +370,21 @@ def минута(username, host, port, status):
             изпращай_промени(водачи, minute_branch, username, host, port)
 
             # какви са последиците че всички правят това?
-            status.update(state='Сглобявам')
+            update_state('Сглобявам')
             сглоби_минута(minute_branch, аз)
             sleep(max(0, СГЛОБЯВАНЕ - сега().second))
 
-            status.update(state='Гласувам')
+            update_state('Гласувам')
             гласувай(водачи, minute_branch, аз)
 
-            status.update(state='Приемам')
+            update_state('Приемам')
             приеми_минута(водачи, minute_branch)
 
             if stored_exception:
                 break
             sleep(max(0, ПРИЕМАНЕ - сега().second))
 
-            status.update(state='Почиствам')
+            update_state('Почиствам')
             log.info('Почиствам')
             if am_leader(водачи):
                 клони = вземи_клони(local=False)
@@ -419,6 +419,10 @@ def get_head():
 def get_branch():
     return git.branch('--show-current').strip()
 
+def update_state(state):
+    global status_bar
+    status_bar.update(state=state, branch=get_branch(), head=get_head(),)
+
 if __name__ == '__main__':
     import argparse
     import getpass
@@ -430,8 +434,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     global manager
+    global status_bar
     manager = enlighten.get_manager()
-    status = manager.status_bar(
+    status_bar = manager.status_bar(
             status_format='Минало{fill}{branch}{fill}{head}{fill}{state}{fill}{elapsed}',
             color='bold_underline_bright_white_on_lightslategray',
             justify=enlighten.Justify.CENTER,
@@ -510,7 +515,7 @@ if __name__ == '__main__':
         ssh_host = args.ssh_host
         ssh_port = args.ssh_port
 
-    status.update(state='*')
+    update_state('*')
 
-    минута(args.ssh_user, ssh_host, ssh_port, status)
+    минута(args.ssh_user, ssh_host, ssh_port)
     manager.stop()
