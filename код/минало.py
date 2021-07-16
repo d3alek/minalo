@@ -353,7 +353,7 @@ def минути(username, host, port):
     while True:
         try:
             head = get_head()
-            if previous_head and git('rev-list', previous_head, head, '--', 'код'):
+            if previous_head and git('rev-list', previous_head+'...'+ head, '--', 'код'):
                 log.info('*'*3 + ' Промени в кода ' + '*'*3)
                 restart()
 
