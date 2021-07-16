@@ -356,7 +356,7 @@ def минути(username, host, port):
                 sleep(ПОЧИСТВАНЕ)
 
             update_state('Слушам')
-            minute_branch = calculate_minute_branch(t)
+            minute_branch = calculate_minute_branch(сега())
 
             водачи = вземи_водачи()
 
