@@ -34,9 +34,9 @@ nlog.addHandler(ch)
 glog.addHandler(ch)
 
 # СЛУШАНЕ идва от помощни.py
-СГЛОБЯВАНЕ = 45
-ГЛАСУВАНЕ = 50
-ПРИЕМАНЕ = 57
+СГЛОБЯВАНЕ = 35
+ГЛАСУВАНЕ = 45
+ПРИЕМАНЕ = 55
 ПОЧИСТВАНЕ = 60
 
 sh2 = sh(_err_to_out=True, _truncate_exc=False)
