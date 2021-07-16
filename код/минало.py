@@ -35,8 +35,8 @@ glog.addHandler(ch)
 
 # СЛУШАНЕ идва от помощни.py
 СГЛОБЯВАНЕ = 35
-ГЛАСУВАНЕ = 45
-ПРИЕМАНЕ = 55
+ГЛАСУВАНЕ = 43
+ПРИЕМАНЕ = 51
 ПОЧИСТВАНЕ = 60
 
 sh2 = sh(_err_to_out=True, _truncate_exc=False)
@@ -187,7 +187,6 @@ def изпращай_промени(водачи, minute_branch, username, host,
     check_authorized_keys(minute_branch)
     check_fellows(minute_branch, username, host, port)
 
-    #TODO тегли промени от другите и ги добавяй към своя клон
     for f in get_fellows():
         try:
             pull = git.pull('--no-rebase', '--no-edit', f['id'], minute_branch)
@@ -255,6 +254,7 @@ def гласувай(водачи, minute_branch, aз):
     if remote != аз:
         git.reset('HEAD~1', '--hard') # махаме нашия време комит
     гласувах = False
+    #TODO ако имаме промени които remote-а няма, ще се запазят ли или не?
     glog.debug(git.pull('--no-edit', '-s', 'recursive', '-X', 'theirs', remote, minute_branch))
 
     while not гласувах:
