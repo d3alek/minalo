@@ -462,6 +462,7 @@ if __name__ == '__main__':
             "Now forwarding remote port %d to %s:%d ..."
             % (remote_port, 'localhost', args.ssh_port)
         )
+        pbar.update()
 
         network.reverse_forward_tunnel(
             remote_port, 'localhost', args.ssh_port, client.get_transport())
