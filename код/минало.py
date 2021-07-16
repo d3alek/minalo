@@ -456,14 +456,16 @@ if __name__ == '__main__':
             votes=0,
             state='-',
             autorefresh=True,
-            min_delta=0.5)
+            min_delta=0.5,
+            leave=False)
 
     network_status = manager.status_bar(
             status_format='Мрежа{fill}State: {state}{fill}{elapsed}',
             color='bold_underline_bright_white_on_lightslategray',
             justify=enlighten.Justify.CENTER, state='Свързване',
             autorefresh=True,
-            min_delta=0.5)
+            min_delta=0.5,
+            leave=False)
 
     #TODO премести в network.py
     relay_ports_range = [10000, 11000]
