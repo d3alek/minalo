@@ -58,7 +58,6 @@ def to_state(new_state):
     if (state_index + 1) % len(l) != l.index(new_state):
         raise RuntimeError("Неразрешено преминаване %s -> %s" % (state, new_state))
 
-    log.info('%s -> %s' % (state, new_state))
     # TODO какво правим като сега().second превърти след until?
     # TODO запазвай предишния state и сравнявай дали сега().second е между този и предишния
 
@@ -77,6 +76,7 @@ def to_state(new_state):
         late = s - state.value
         log.warning("Закъсняваме с %d секунди във състояние %s" % (late, state))
 
+    log.info('%s -> %s' % (state, new_state))
     state = new_state
 
 def restart():
