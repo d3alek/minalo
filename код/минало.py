@@ -71,13 +71,13 @@ def to_state(new_state):
         seconds = state.value - s
         log.info("Изчаквам %d секунди да премине времето на %s" % (seconds, state))
         sleep(seconds)
-    if s == state.value:
+    elif s == state.value:
         pass
     else:
         late = s - state.value
         log.warning("Закъсняваме с %d секунди във състояние %s" % (late, state))
 
-    new_state = state
+    state = new_state
 
 def restart():
     import sys
