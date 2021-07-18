@@ -4,14 +4,15 @@ import sh
 from sh import rm
 import os
 import yaml
-from помощни import calculate_minute_branch, сега, вземи_аз, git
+from помощни import calculate_minute_branch, get_fellows, сега, вземи_аз, git
 
 import colorlog
+import logging
 log = colorlog.getLogger('прати')
-log.setLevel(colorlog.DEBUG)
+log.setLevel(logging.DEBUG)
 
 ch = colorlog.StreamHandler()
-ch.setLevel(colorlog.DEBUG)
+ch.setLevel(logging.DEBUG)
 ch.setFormatter(colorlog.ColoredFormatter(
     '%(log_color)s%(asctime)s:%(levelname)s:%(name)s:%(message)s',
     '%H:%M:%S'))
@@ -38,7 +39,7 @@ def прати(пращач, получател, количество, атак�
 
     rm('-rf', 'clone')
 
-    log.debug(git.clone(fellow[0], 'clone'))
+    log.debug(git.clone(fellow[0]['remote'], 'clone'))
     os.chdir('clone')
 
 
@@ -72,7 +73,7 @@ def прати(пращач, получател, количество, атак�
     elif атака == "грешен клон main":
         клон = 'main'
     else:
-        клон = calculate_minute_branch(аз)
+        клон = calculate_minute_branch()
     log.debug(git.checkout('-B', клон))
     log.debug(git.add(файл_пращач, файл_получател))
     log.debug(git.commit('--gpg-sign='+аз, '-m', '%s праща %s на %s' % (пращач, количество, получател)))
