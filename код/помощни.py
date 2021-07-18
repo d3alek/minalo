@@ -6,7 +6,13 @@ from sh import gpg2
 
 import os
 
-СЛУШАНЕ = 30
+from enum import Enum
+class State(Enum):
+    СЛУШАНЕ = 30
+    СГЛОБЯВАНЕ = 35
+    ГЛАСУВАНЕ = 43
+    ПРИЕМАНЕ = 55
+    ПОЧИСТВАНЕ = 60
 
 sh2 = sh(_err_to_out=True)
 git = sh2.git
@@ -30,7 +36,7 @@ def вземи_гласували():
 def calculate_minute_branch(t=None):
   if t == None:
     t = сега()
-  if t.second > СЛУШАНЕ:
+  if t.second > State.СЛУШАНЕ.value:
     t = t + datetime.timedelta(minutes=1)   
   t = t.isoformat(timespec='minutes').replace(':','-') # защото Git клоните не могат да съдържат :
   return t

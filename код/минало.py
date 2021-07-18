@@ -4,7 +4,7 @@ import datetime
 import time
 import sh
 import os
-from помощни import calculate_minute_branch, СЛУШАНЕ, сега, get_fellows, вземи_аз
+from помощни import State, calculate_minute_branch, сега, get_fellows, вземи_аз
 
 аз = вземи_аз()
 водач_папка = os.getcwd() + '/водач'
@@ -33,19 +33,12 @@ log.addHandler(ch)
 nlog.addHandler(ch)
 glog.addHandler(ch)
 
-# СЛУШАНЕ идва от помощни.py
-СГЛОБЯВАНЕ = 35
-ГЛАСУВАНЕ = 43
-ПРИЕМАНЕ = 55
-ПОЧИСТВАНЕ = 60
-
 sh2 = sh(_err_to_out=True, _truncate_exc=False)
 git = sh2.git
 
-def sleep(until):
-    # TODO какво правим като сега().second превърти след until?
-    # TODO запазвай предишния state и сравнявай дали сега().second е между този и предишния
-    seconds = max(0, until - сега().second)
+state = State.СЛУШАНЕ
+
+def sleep(seconds):
     global manager
     bar = manager.counter(total=seconds, desc='Sleep', unit='ticks', leave=False) 
     for s in range(seconds):
@@ -53,6 +46,39 @@ def sleep(until):
         bar.update()
 
     bar.close()
+
+def to_state(new_state):
+    global state
+    if new_state == state:
+        raise RuntimeError("Вече съм в състояние " + state)
+        return
+
+    l = list(State)
+    state_index = l.index(state)
+    previous_state = State((state_index-1)% len(l))
+    if (state_index + 1) % len(l) != l.index(new_state):
+        raise RuntimeError("Неразрешено преминаване %s -> %s" % (state, new_state))
+
+    log.info('%s -> %s' % (state, new_state))
+    # TODO какво правим като сега().second превърти след until?
+    # TODO запазвай предишния state и сравнявай дали сега().second е между този и предишния
+
+    s = сега().second
+    if s < previous_state.value:
+        log.info("Вероятно сме се забивили и минутата е преминала.")
+        s += 60
+
+    if s < state.value:
+        seconds = state.value - s
+        log.info("Изчаквам %d секунди да премине времето на %s" % (seconds, state))
+        sleep(seconds)
+    if s == state.value:
+        pass
+    else:
+        late = s - state.value
+        log.warning("Закъсняваме с %d секунди във състояние %s" % (seconds, state))
+
+    new_state = state
 
 def restart():
     import sys
@@ -275,8 +301,6 @@ def гласувай(minute_branch, aз):
             glog.debug(git.reset('--hard', 'HEAD~1'))
             glog.debug(git.pull(remote, minute_branch))
 
-    sleep(max(0, ГЛАСУВАНЕ - сега().second))
-
 def приеми_минута(minute_branch):
     log.info('Приемам минута')
 
@@ -364,8 +388,8 @@ def минути(username, host, port):
                 restart()
 
             # Това е нужно защото може да сме влезли в цикъла след СЛУШАНЕ, тук имаме два варианта: 1/ да се преструваме че сме влезли по-рано, което правим по-долу, или 2/ да се включим само за частта, до която се е стигнало. TODO опитай вариант 2
-            if сега().second > СЛУШАНЕ:
-                sleep(ПОЧИСТВАНЕ)
+            if сега().second > State.СЛУШАНЕ.value:
+                to_state(State.СЛУШАНЕ)
 
             update_state('Слушам')
             minute_branch = calculate_minute_branch()
@@ -373,22 +397,25 @@ def минути(username, host, port):
             git.checkout('main')
 
             слушай_промени(minute_branch, username, host, port)
-            sleep(СЛУШАНЕ)
+
+            to_state(State.СГЛОБЯВАНЕ)
 
             # какви са последиците че всички правят това?
             update_state('Сглобявам')
             сглоби_минута(minute_branch, аз)
-            sleep(СГЛОБЯВАНЕ)
 
+            to_state(State.ГЛАСУВАНЕ)
             update_state('Гласувам')
             гласувай(minute_branch, аз)
 
+            to_state(State.ПРИЕМАНЕ)
             update_state('Приемам')
             приеми_минута(minute_branch)
 
             if stored_exception:
                 break
-            sleep(ПРИЕМАНЕ)
+
+            to_state(State.ПОЧИСТВАНЕ)
 
             update_state('Почиствам')
             log.info('Почиствам')
@@ -409,7 +436,7 @@ def минути(username, host, port):
                     glog.debug(git.branch('-D', клон))
 
             приготви()
-            sleep(ПОЧИСТВАНЕ)
+            to_state(State.СЛУШАНЕ)
         except KeyboardInterrupt:
             if stored_exception:
                 raise 
