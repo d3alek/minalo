@@ -44,7 +44,7 @@ def прати(пращач, получател, количество, атак�
             with open('време', 'r') as fi:
                 t = datetime.datetime.fromisoformat(fi.read())
 
-            expected = сега().isoformat(timespec='minutes')
+            expected = (сега() - datetime.timedelta(minutes=1)).isoformat(timespec='minutes')
             if t != expected:
                 log.error('Съучастник %s има грешно време %s, очавано %s' % (f['id'], t, expected))
                 continue
