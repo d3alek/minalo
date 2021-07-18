@@ -58,9 +58,6 @@ def to_state(new_state):
     if (state_index + 1) % len(l) != l.index(new_state):
         raise RuntimeError("Неразрешено преминаване %s -> %s" % (state, new_state))
 
-    # TODO какво правим като сега().second превърти след until?
-    # TODO запазвай предишния state и сравнявай дали сега().second е между този и предишния
-
     s = сега().second
     if state != State.Начало and s < previous_state.value:
         log.info("Вероятно сме се забивили и минутата е преминала.")
@@ -104,7 +101,8 @@ def приготви():
     for m in modified:
         glog.debug(git.add(m))
 
-    glog.info(git.commit('--gpg-sign='+аз, '-m', 'Автоматично запазвам локално променени %s' % modified))
+    if modified:
+        glog.info(git.commit('--gpg-sign='+аз, '-m', 'Автоматично запазвам локално променени %s' % modified))
 #
 #    git.checkout('main')
 #    git.checkout('-b', 'untracked-'+време_клон())
