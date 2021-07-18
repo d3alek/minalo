@@ -75,7 +75,7 @@ def to_state(new_state):
         pass
     else:
         late = s - state.value
-        log.warning("Закъсняваме с %d секунди във състояние %s" % (seconds, state))
+        log.warning("Закъсняваме с %d секунди във състояние %s" % (late, state))
 
     new_state = state
 
