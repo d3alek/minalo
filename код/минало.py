@@ -388,8 +388,8 @@ def минути(username, host, port):
                 restart()
 
             # Това е нужно защото може да сме влезли в цикъла след СЛУШАНЕ, тук имаме два варианта: 1/ да се преструваме че сме влезли по-рано, което правим по-долу, или 2/ да се включим само за частта, до която се е стигнало. TODO опитай вариант 2
-            if сега().second > State.СЛУШАНЕ.value:
-                to_state(State.Слушане)
+            if сега().second > State.Слушане.value:
+                to_state(State.Начало)
 
             update_state('Слушам')
             minute_branch = calculate_minute_branch()
