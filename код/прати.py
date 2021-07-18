@@ -39,20 +39,23 @@ def прати(пращач, получател, количество, атак�
     for f in get_fellows():
         rm('-rf', 'clone')
         try:
+            #TODO instead of clone, inspect file
             log.debug(git.clone(f['remote'], 'clone'))
             os.chdir('clone')
             with open('време', 'r') as fi:
                 t = datetime.datetime.fromisoformat(fi.read())
 
-            expected = (сега() - datetime.timedelta(minutes=1)).isoformat(timespec='minutes')
+            expected = сега() - datetime.timedelta(minutes=1)
+            expected = expected.replace(second = 0, microsecond=0)
             if t != expected:
                 log.error('Съучастник %s има грешно време %s, очавано %s' % (f['id'], t, expected))
                 continue
             else:
-                log.info('Използвам съучастник %s' % (f['id'],))
+                log.info('Използвам %s' % (f['id'],))
                 fellow = f
-        except:
-            log.warning('Не успях да се свържа със съучастник %s' % (f['id'],))
+        except Exception as e:
+            log.warning('Не успях да се свържа със %s' % (f['id'],))
+            log.error(e)
 
 
     if fellow == None:
