@@ -54,7 +54,7 @@ def to_state(new_state):
 
     l = list(State)
     state_index = l.index(state)
-    previous_state = State((state_index-1)% len(l))
+    previous_state = list(State)[(state_index-1)% len(l)]
     if (state_index + 1) % len(l) != l.index(new_state):
         raise RuntimeError("Неразрешено преминаване %s -> %s" % (state, new_state))
 
