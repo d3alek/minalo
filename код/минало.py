@@ -390,6 +390,8 @@ def минути(username, host, port):
             if сега().second > State.Слушане.value:
                 to_state(State.Начало)
 
+            to_state(State.Слушане)
+
             update_state('Слушам')
             minute_branch = calculate_minute_branch()
 
