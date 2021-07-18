@@ -36,7 +36,7 @@ glog.addHandler(ch)
 sh2 = sh(_err_to_out=True, _truncate_exc=False)
 git = sh2.git
 
-state = State.СЛУШАНЕ
+state = State.Начало
 
 def sleep(seconds):
     global manager
@@ -50,7 +50,7 @@ def sleep(seconds):
 def to_state(new_state):
     global state
     if new_state == state:
-        raise RuntimeError("Вече съм в състояние " + state)
+        raise RuntimeError("Вече съм в състояние %s" % state)
         return
 
     l = list(State)
@@ -389,7 +389,7 @@ def минути(username, host, port):
 
             # Това е нужно защото може да сме влезли в цикъла след СЛУШАНЕ, тук имаме два варианта: 1/ да се преструваме че сме влезли по-рано, което правим по-долу, или 2/ да се включим само за частта, до която се е стигнало. TODO опитай вариант 2
             if сега().second > State.СЛУШАНЕ.value:
-                to_state(State.СЛУШАНЕ)
+                to_state(State.Слушане)
 
             update_state('Слушам')
             minute_branch = calculate_minute_branch()
@@ -398,24 +398,24 @@ def минути(username, host, port):
 
             слушай_промени(minute_branch, username, host, port)
 
-            to_state(State.СГЛОБЯВАНЕ)
+            to_state(State.Сглобяване)
 
             # какви са последиците че всички правят това?
             update_state('Сглобявам')
             сглоби_минута(minute_branch, аз)
 
-            to_state(State.ГЛАСУВАНЕ)
+            to_state(State.Гласуване)
             update_state('Гласувам')
             гласувай(minute_branch, аз)
 
-            to_state(State.ПРИЕМАНЕ)
+            to_state(State.Приемане)
             update_state('Приемам')
             приеми_минута(minute_branch)
 
             if stored_exception:
                 break
 
-            to_state(State.ПОЧИСТВАНЕ)
+            to_state(State.Почистване)
 
             update_state('Почиствам')
             log.info('Почиствам')
@@ -436,7 +436,7 @@ def минути(username, host, port):
                     glog.debug(git.branch('-D', клон))
 
             приготви()
-            to_state(State.СЛУШАНЕ)
+            to_state(State.Начало)
         except KeyboardInterrupt:
             if stored_exception:
                 raise 
