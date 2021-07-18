@@ -8,10 +8,10 @@ from помощни import calculate_minute_branch, сега, вземи_аз, g
 
 import colorlog
 log = colorlog.getLogger('прати')
-log.setLevel(logging.DEBUG)
+log.setLevel(colorlog.DEBUG)
 
 ch = colorlog.StreamHandler()
-ch.setLevel(logging.DEBUG)
+ch.setLevel(colorlog.DEBUG)
 ch.setFormatter(colorlog.ColoredFormatter(
     '%(log_color)s%(asctime)s:%(levelname)s:%(name)s:%(message)s',
     '%H:%M:%S'))
