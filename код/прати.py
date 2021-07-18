@@ -4,7 +4,8 @@ import sh
 from sh import rm
 import os
 import yaml
-from помощни import calculate_minute_branch, get_fellows, сега, вземи_аз, git
+from помощни import calculate_minute_branch, get_fellows, сега, вземи_аз, git, сега
+import datetime
 
 import colorlog
 import logging
@@ -34,14 +35,28 @@ def прати(пращач, получател, количество, атак�
 
     log.info('Аз ' + аз)
     log.debug(git.checkout('main'))
-    
-    fellow = get_fellows()
+    fellow = None
+    for f in get_fellows():
+        rm('-rf', 'clone')
+        try:
+            log.debug(git.clone(f['remote'], 'clone'))
+            os.chdir('clone')
+            with open('време', 'r') as fi:
+                t = datetime.datetime.fromisoformat(fi.read())
 
-    rm('-rf', 'clone')
+            expected = сега().isoformat(timespec='minutes')
+            if t != expected:
+                log.error('Съучастник %s има грешно време %s, очавано %s' % (f['id'], t, expected))
+                continue
+            else:
+                log.info('Използвам съучастник %s' % (f['id'],))
+                fellow = f
+        except:
+            log.warning('Не успях да се свържа със съучастник %s' % (f['id'],))
 
-    log.debug(git.clone(fellow[0]['remote'], 'clone'))
-    os.chdir('clone')
 
+    if fellow == None:
+        return
 
     if атака == 'праща чужди пари':
         файл_пращач = 'пари/участници/%s' % 'лошия' 
@@ -68,7 +83,6 @@ def прати(пращач, получател, количество, атак�
         log.info(получател, пари)
 
     if атака == "грешен клон време":
-        import datetime
         клон = calculate_minute_branch(ключ=аз, време=сега() - datetime.timedelta(minutes=1))
     elif атака == "грешен клон main":
         клон = 'main'
@@ -80,7 +94,7 @@ def прати(пращач, получател, количество, атак�
 
 
     try:
-        log.debug(git.push(fellow[0]['remote']))
+        log.debug(git.push(fellow['remote']))
         if атака:
             log.info('ЛОШ УСПЯ: Атака %s успя' % атака)
 
