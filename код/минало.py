@@ -214,6 +214,7 @@ def слушай_промени(minute_branch, username, host, port):
     except:
         # Най-вероятно го няма minute_branch
         pass
+        # TODO ако някой е сложил в този клон промени преди да дойда тук е нужно да  го rebase-на и интегрирам. Или cherry-pick-на промените. Това запазва ли им commit id-то?
 
     git.push(аз, minute_branch)
 
