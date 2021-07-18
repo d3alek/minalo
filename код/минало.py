@@ -50,7 +50,6 @@ def sleep(seconds):
 def to_state(new_state):
     global state
     if new_state == state:
-        raise RuntimeError("Вече съм в състояние %s" % state)
         return
 
     l = list(State)
