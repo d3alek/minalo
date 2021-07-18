@@ -63,7 +63,7 @@ def to_state(new_state):
     # TODO запазвай предишния state и сравнявай дали сега().second е между този и предишния
 
     s = сега().second
-    if s < previous_state.value:
+    if state != State.Начало and s < previous_state.value:
         log.info("Вероятно сме се забивили и минутата е преминала.")
         s += 60
 
