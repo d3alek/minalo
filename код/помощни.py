@@ -37,7 +37,7 @@ def вземи_гласували():
 def calculate_minute_branch(t=None):
   if t == None:
     t = сега()
-  if t.second > State.СЛУШАНЕ.value:
+  if t.second > State.Слушане.value:
     t = t + datetime.timedelta(minutes=1)   
   t = t.isoformat(timespec='minutes').replace(':','-') # защото Git клоните не могат да съдържат :
   return t
