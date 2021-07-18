@@ -4,15 +4,17 @@ import sh
 from sh import rm
 import os
 import yaml
-from помощни import calculate_minute_branch, сега, вземи_аз, git, CustomFormatter
+from помощни import calculate_minute_branch, сега, вземи_аз, git
 
-import logging
-log = logging.getLogger('прати')
+import colorlog
+log = colorlog.getLogger('прати')
 log.setLevel(logging.DEBUG)
 
-ch = logging.StreamHandler()
+ch = colorlog.StreamHandler()
 ch.setLevel(logging.DEBUG)
-ch.setFormatter(CustomFormatter())
+ch.setFormatter(colorlog.ColoredFormatter(
+    '%(log_color)s%(asctime)s:%(levelname)s:%(name)s:%(message)s',
+    '%H:%M:%S'))
 
 log.addHandler(ch)
 
