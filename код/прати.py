@@ -4,7 +4,7 @@ import sh
 from sh import rm
 import os
 import yaml
-from помощни import намери_водачи, време_клон, сега, вземи_аз, git, CustomFormatter
+from помощни import calculate_minute_branch, сега, вземи_аз, git, CustomFormatter
 
 import logging
 log = logging.getLogger('прати')
@@ -32,11 +32,11 @@ def прати(пращач, получател, количество, атак�
     log.info('Аз', аз)
     log.debug(git.checkout('main'))
     
-    водачи = намери_водачи()
+    fellow = get_fellows()
 
     rm('-rf', 'clone')
 
-    log.debug(git.clone(водачи[0], 'clone'))
+    log.debug(git.clone(fellow[0], 'clone'))
     os.chdir('clone')
 
 
@@ -66,18 +66,18 @@ def прати(пращач, получател, количество, атак�
 
     if атака == "грешен клон време":
         import datetime
-        клон = време_клон(ключ=аз, време=сега() - datetime.timedelta(minutes=1))
+        клон = calculate_minute_branch(ключ=аз, време=сега() - datetime.timedelta(minutes=1))
     elif атака == "грешен клон main":
         клон = 'main'
     else:
-        клон = време_клон(аз)
+        клон = calculate_minute_branch(аз)
     log.debug(git.checkout('-B', клон))
     log.debug(git.add(файл_пращач, файл_получател))
     log.debug(git.commit('--gpg-sign='+аз, '-m', '%s праща %s на %s' % (пращач, количество, получател)))
 
 
     try:
-        log.debug(git.push(водачи[0]))
+        log.debug(git.push(fellow[0]))
         if атака:
             log.info('ЛОШ УСПЯ: Атака %s успя' % атака)
 
@@ -93,15 +93,15 @@ def прати(пращач, получател, количество, атак�
 
 def откажи():
     аз = вземи_аз()
-    клон = време_клон(аз)
-    водачи = намери_водачи()
+    клон = calculate_minute_branch(аз)
+    fellows = get_fellows()
 
-    for водач in водачи:
+    for fellow in fellows:
         try:
-            log.debug(git.push(водач, '--delete', клон))
-            print('Успешно отказано пратено към', водач)
+            log.debug(git.push(fellow, '--delete', клон))
+            print('Успешно отказано пратено към', fellow)
         except:
-            print('Не успях да откажа пратено към', водач)
+            print('Не успях да откажа пратено към', fellow)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
