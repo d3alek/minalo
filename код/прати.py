@@ -4,7 +4,8 @@ import sh
 from sh import rm
 import os
 import yaml
-from помощни import calculate_minute_branch, get_fellows, сега, вземи_аз, git, сега
+from помощни import calculate_minute_branch, get_fellows, сега, вземи_аз, git, сега, get_head
+
 import datetime
 
 import colorlog
@@ -91,15 +92,29 @@ def прати(пращач, получател, количество, атак�
         клон = 'main'
     else:
         клон = calculate_minute_branch()
+
+    start_id = get_head()
+
     log.debug(git.checkout('-B', клон))
     log.debug(git.add(файл_пращач, файл_получател))
     log.debug(git.commit('--gpg-sign='+аз, '-m', '%s праща %s на %s' % (пращач, количество, получател)))
 
+    commit_id = get_head()
 
     try:
         log.debug(git.push(fellow['remote']))
         if атака:
             log.info('ЛОШ УСПЯ: Атака %s успя' % атака)
+
+        max_sleep_until = сега() + datetime.timedelta(minutes=2)
+        while сега() < max_sleep_until:
+            git.fetch(fellow['remote'], main)
+            rev_list = git('rev-list', '^'+start_id)
+            if commit_id in rev_list:
+                log.info("Изпращането потвърдено!")
+                break
+
+            log.info('Чакам потвърждение - ' + len(rev_list) + ' нови промени откакто изпратихме')
 
 
     except sh.ErrorReturnCode_1 as e:

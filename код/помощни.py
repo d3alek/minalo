@@ -18,6 +18,9 @@ class State(Enum):
 sh2 = sh(_err_to_out=True)
 git = sh2.git
 
+def get_head():
+    return git('rev-parse', '--short', 'HEAD').strip()
+
 def сега():
   return datetime.datetime.utcnow()
 
