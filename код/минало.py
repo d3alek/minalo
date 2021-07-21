@@ -264,7 +264,7 @@ def гласувай(minute_branch, aз):
         try:
             glog.debug(git.fetch(fellow['id'], minute_branch))
         except:
-            log.error('Не успях да изтелгя последните промени от ' + fellow['id']) 
+            log.error('Не успях да изтегля последните промени от ' + fellow['id']) 
 
 
     клони = вземи_клони(шаблон=minute_branch, local=False)
