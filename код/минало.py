@@ -352,7 +352,7 @@ def минути(username, host, port):
         log.info('Правя гол водач с който ще общуват съучастниците')
         glog.debug(git.clone('.git', водач_папка, '--bare'))
 
-    cp('код/pre-receive', водач_папка/hooks)
+    cp('код/pre-receive', водач_папка + '/hooks')
     #TODO отдели
     fellows = get_fellows()
     remotes = list(map(str.strip, git.remote().split('\n')))
