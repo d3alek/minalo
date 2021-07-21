@@ -210,11 +210,9 @@ def слушай_промени(minute_branch, username, host, port):
         pass
     glog.debug(git.checkout(minute_branch))
     try:
-        glog.debug(git.pull(аз, minute_branch, '--ff-only'))
+        glog.debug(git.pull(аз, minute_branch, '--rebase'))
     except:
-        # Най-вероятно го няма minute_branch
-        pass
-        # TODO ако някой е сложил в този клон промени преди да дойда тук е нужно да  го rebase-на и интегрирам. Или cherry-pick-на промените. Това запазва ли им commit id-то?
+        raise
 
     git.push(аз, minute_branch)
 
