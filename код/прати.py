@@ -97,7 +97,7 @@ def прати(пращач, получател, количество, атак�
     start_id = get_head()
     manager = enlighten.get_manager()
     status_bar = manager.status_bar(
-            status_format='{start}->{commit}{fill}{elapsed}',
+            status_format='{start}->{commit}{fill}{msg}{fill}{elapsed}',
             color='bold_underline_bright_white_on_lightslategray',
             justify=enlighten.Justify.CENTER,
             id=аз[:7],
@@ -139,6 +139,7 @@ def прати(пращач, получател, количество, атак�
             rev_list = git('rev-list', 'HEAD', '^'+start_id)
             if commit_id in rev_list:
                 log.info("Изпращането потвърдено!")
+                status_bar.update(msg="Изпращането потвърдено!")
                 break
 
             status_bar.update(msg='Чакам потвърждение - %d нови промени откакто изпратихме' % len(rev_list))
