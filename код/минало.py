@@ -3,6 +3,7 @@
 import datetime
 import time
 import sh
+from sh import cp
 import os
 from помощни import State, calculate_minute_branch, сега, get_fellows, вземи_аз, get_head
 
@@ -264,7 +265,7 @@ def гласувай(minute_branch, aз):
         try:
             glog.debug(git.fetch(fellow['id'], minute_branch))
         except:
-            log.error('Не успях да изтелгя последните промени от ' + fellow['id']) 
+            log.error('Не успях да изтегля последните промени от ' + fellow['id']) 
 
 
     клони = вземи_клони(шаблон=minute_branch, local=False)
@@ -351,6 +352,7 @@ def минути(username, host, port):
         log.info('Правя гол водач с който ще общуват съучастниците')
         glog.debug(git.clone('.git', водач_папка, '--bare'))
 
+    cp('код/pre-receive', водач_папка + '/hooks')
     #TODO отдели
     fellows = get_fellows()
     remotes = list(map(str.strip, git.remote().split('\n')))
