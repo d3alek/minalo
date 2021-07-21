@@ -211,8 +211,11 @@ def слушай_промени(minute_branch, username, host, port):
     glog.debug(git.checkout(minute_branch))
     try:
         glog.debug(git.pull(аз, minute_branch, '--rebase'))
-    except:
-        raise
+    except Exception as e:
+        if "couldn't find remote ref" in str(e):
+            pass
+        else:
+            raise
 
     git.push(аз, minute_branch)
 
