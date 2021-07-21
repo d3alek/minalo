@@ -6,6 +6,7 @@ import fileinput
 from sh import git, sed
 print(os.getcwd())
 os.environ['GNUPGHOME'] = os.getcwd() + '/../../тайник'
+print(os.getcwd())
 sys.path.append(os.getcwd() + '/../../код')
 from помощни import calculate_minute_branch
 
