@@ -100,18 +100,19 @@ def прати(пращач, получател, количество, атак�
     log.debug(git.commit('--gpg-sign='+аз, '-m', '%s праща %s на %s' % (пращач, количество, получател)))
 
     commit_id = get_head()
+    log.info('Изпращане ' +  commit_id)
 
     try:
         пратих = False
         while not пратих:
             try:
-                log.debug(git.push(fellow['remote'], 'клон'))
+                log.debug(git.push(fellow['remote'], клон))
                 пратих = True
             except sh.ErrorReturnCode_1 as e:
                 #TODO това не работи с лош
                 log.debug(e)
                 git.reset('--hard', 'HEAD~1')
-                log.debug(git.pull(remote, 'клон'))
+                log.debug(git.pull(fellow['remote'], клон))
 
         if атака:
             log.info('ЛОШ УСПЯ: Атака %s успя' % атака)
