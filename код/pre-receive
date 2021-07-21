@@ -7,7 +7,7 @@ from sh import git, sed
 print(os.getcwd())
 os.environ['GNUPGHOME'] = os.getcwd() + '/../../тайник'
 sys.path.append(os.getcwd() + '/../../код')
-from помощни import време_клон
+from помощни import calculate_minute_branch
 
 #Format: "oldref newref branch"
 for line in fileinput.input():
@@ -16,9 +16,9 @@ for line in fileinput.input():
     if new.replace('0','') == '':
         #TODO handle delete
         continue
-    key = git('verify-commit', new, '--raw', _err_to_out=True).split('VALIDSIG ')[1].split(' ')[0]
+    key = git('verify-commit', new, '--raw', _err_to_out=True).split('VALIDSIG ')[1].split(' ')[0] #TODO use
     branch_name = ref.split('/')[-1]
-    очаквано_име = време_клон(key)
+    очаквано_име = calculate_minute_branch()
     if old.replace('0','') == '' and branch_name != очаквано_име:
         raise RuntimeError("Клона е с грешно име %s очаквано име %s" % (branch_name, очаквано_име))
 
