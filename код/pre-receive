@@ -6,7 +6,7 @@ import fileinput
 from sh import git, sed
 print(os.getcwd())
 os.environ['GNUPGHOME'] = os.getcwd() + '/../../тайник'
-sys.path.append(os.getcwd() + '/../../')
+sys.path.append(os.getcwd() + '/../../код')
 from помощни import време_клон
 
 #Format: "oldref newref branch"
