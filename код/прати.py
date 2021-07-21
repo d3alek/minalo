@@ -94,6 +94,7 @@ def прати(пращач, получател, количество, атак�
         клон = calculate_minute_branch()
 
     start_id = get_head()
+    log.debug('Старт ' + start_id)
 
     log.debug(git.checkout('-B', клон))
     log.debug(git.add(файл_пращач, файл_получател))
@@ -111,8 +112,7 @@ def прати(пращач, получател, количество, атак�
             except sh.ErrorReturnCode_1 as e:
                 #TODO това не работи с лош
                 log.debug(e)
-                git.reset('--hard', 'HEAD~1')
-                log.debug(git.pull(fellow['remote'], клон))
+                log.debug(git.pull(fellow['remote'], клон, '--rebase'))
 
         if атака:
             log.info('ЛОШ УСПЯ: Атака %s успя' % атака)
