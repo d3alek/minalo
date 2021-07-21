@@ -4,7 +4,7 @@ import datetime
 import time
 import sh
 import os
-from помощни import State, calculate_minute_branch, сега, get_fellows, вземи_аз
+from помощни import State, calculate_minute_branch, сега, get_fellows, вземи_аз, get_head
 
 аз = вземи_аз()
 водач_папка = os.getcwd() + '/водач'
@@ -450,9 +450,6 @@ def минути(username, host, port):
     #TODO if we have modified код since last loop, restart here
 
 # Промени в кода се приемат само с няколко (3) подписа на разработчици (такива които са правили вече промени по кода).
-
-def get_head():
-    return git('rev-parse', '--short', 'HEAD').strip()
 
 def get_branch():
     return git.branch('--show-current').strip()
