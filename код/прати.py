@@ -102,13 +102,24 @@ def прати(пращач, получател, количество, атак�
     commit_id = get_head()
 
     try:
-        log.debug(git.push(fellow['remote']))
+        пратих = False
+        while not пратих:
+            try:
+                log.debug(git.push(fellow['remote'], 'клон'))
+                пратих = True
+            except sh.ErrorReturnCode_1 as e:
+                #TODO това не работи с лош
+                log.debug(e)
+                git.reset('--hard', 'HEAD~1')
+                log.debug(git.pull(remote, 'клон'))
+
         if атака:
             log.info('ЛОШ УСПЯ: Атака %s успя' % атака)
 
         max_sleep_until = сега() + datetime.timedelta(minutes=2)
         while сега() < max_sleep_until:
-            git.fetch(fellow['remote'], main)
+            git.fetch(fellow['remote'], 'main')
+            git.checkout('FETCH_HEAD')
             rev_list = git('rev-list', '^'+start_id)
             if commit_id in rev_list:
                 log.info("Изпращането потвърдено!")
