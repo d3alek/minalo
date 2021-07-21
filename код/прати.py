@@ -10,6 +10,7 @@ import datetime
 
 import colorlog
 import logging
+import enlighten
 log = colorlog.getLogger('прати')
 log.setLevel(logging.DEBUG)
 
@@ -94,13 +95,27 @@ def прати(пращач, получател, количество, атак�
         клон = calculate_minute_branch()
 
     start_id = get_head()
+    manager = enlighten.get_manager()
+    status_bar = manager.status_bar(
+            status_format='{start}->{commit}{fill}{elapsed}',
+            color='bold_underline_bright_white_on_lightslategray',
+            justify=enlighten.Justify.CENTER,
+            id=аз[:7],
+            start='-',
+            commit='-',
+            autorefresh=True,
+            min_delta=0.5,
+            leave=False)
+
     log.debug('Старт ' + start_id)
+    status_bar.update(start=start_id)
 
     log.debug(git.checkout('-B', клон))
     log.debug(git.add(файл_пращач, файл_получател))
     log.debug(git.commit('--gpg-sign='+аз, '-m', '%s праща %s на %s' % (пращач, количество, получател)))
 
     commit_id = get_head()
+    status_bar.update(commit=commit_id)
     log.info('Изпращане ' +  commit_id)
 
     try:
@@ -121,12 +136,12 @@ def прати(пращач, получател, количество, атак�
         while сега() < max_sleep_until:
             git.fetch(fellow['remote'], 'main')
             git.checkout('FETCH_HEAD')
-            rev_list = git('rev-list', '^'+start_id)
+            rev_list = git('rev-list', 'HEAD', '^'+start_id)
             if commit_id in rev_list:
                 log.info("Изпращането потвърдено!")
                 break
 
-            log.info('Чакам потвърждение - %d нови промени откакто изпратихме' % len(rev_list))
+            status_bar.update(msg='Чакам потвърждение - %d нови промени откакто изпратихме' % len(rev_list))
 
     except sh.ErrorReturnCode_1 as e:
         log.error(str(e.stdout,'utf-8'))
