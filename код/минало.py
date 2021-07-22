@@ -103,7 +103,7 @@ def приготви():
         glog.debug(git.add(m))
 
     if modified:
-        glog.info(git.commit('--gpg-sign='+аз, '-m', 'Автоматично запазвам локално променени %s' % modified))
+        glog.info(git.commit('-m', 'Автоматично запазвам локално променени %s' % modified))
 #
 #    git.checkout('main')
 #    git.checkout('-b', 'untracked-'+време_клон())
@@ -164,7 +164,7 @@ def check_authorized_keys(minute_branch):
         with open('authorized_keys', 'a+') as f:
             f.write(my_key)
         glog.debug(git.add('authorized_keys'))
-        glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към authorized_keys'))
+        glog.debug(git.commit('-m', 'Добавям се към authorized_keys'))
         # Това обновява minute_branch от нашия водач, като обновява и него. По него ние получаваме съобщения от другите, затова е хубаво да се обновяваме. После обновения клон пращаме на сегашния водач
         glog.debug(rush(аз, minute_branch))
 
@@ -194,9 +194,9 @@ def check_fellows(minute_branch, username, host, port):
                 f.write('%s %s\n' % (с['id'], с['remote']))
         glog.debug(git.add('съучастници'))
         if намерих_себе_си_грешен_адрес:
-            glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Обновявам адреса си в съучастници'))
+            glog.debug(git.commit('-m', 'Обновявам адреса си в съучастници'))
         else:
-            glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Добавям се към съучастници'))
+            glog.debug(git.commit('-m', 'Добавям се към съучастници'))
 
         try:
             glog.debug(rush(аз, minute_branch))
@@ -225,7 +225,7 @@ def слушай_промени(minute_branch, username, host, port):
 
     for f in get_fellows():
         try:
-            pull = git.pull('--no-rebase', '--no-edit', f['id'], minute_branch)
+            pull = git.pull('--no-rebase', '--no-edit', f['id'], minute_branch) # TODO подписвай! ако има git setting за автоматично подписване, използвай го
             log.info(pull)
         except Exception as e:
             if 'CONFLICT' in str(e):
@@ -254,7 +254,7 @@ def сглоби_минута(minute_branch, аз):
     glog.debug(git.add('време'))
     glog.debug(git.add('гласове'))
     
-    glog.debug(git.commit('--gpg-sign='+аз, '-m', 'време ' + време))
+    glog.debug(git.commit('-m', 'време ' + време))
 
     glog.debug(git.push(аз, minute_branch))
 
@@ -293,7 +293,7 @@ def гласувай(minute_branch, aз):
                 f.write(аз+'\n')
 
             glog.debug(git.add('гласове'))
-            glog.debug(git.commit('--gpg-sign='+аз, '-m', 'Глас от ' + аз))
+            glog.debug(git.commit('-m', 'Глас от ' + аз))
             glog.debug(git.push(remote, minute_branch))
             гласувах = True
         except sh.ErrorReturnCode_1 as e:

@@ -7,7 +7,6 @@ from sh import git, sed
 print(os.getcwd())
 os.environ['GNUPGHOME'] = os.getcwd() + '/../тайник'
 sys.path.append(os.getcwd() + '/../код')
-print(sys.path)
 from помощни import calculate_minute_branch
 
 #Format: "oldref newref branch"
@@ -29,6 +28,10 @@ for line in fileinput.input():
     for rev in missed_revs.split():
         message = sed(git('cat-file', 'commit', rev, _err_to_out=True), '1,/^$/d')
         print('message', message)
-        key = git('verify-commit', rev, '--raw', _err_to_out=True).split('VALIDSIG ')[1].split(' ')[0]
+        try:
+            key = git('verify-commit', rev, '--raw', _err_to_out=True).split('VALIDSIG ')[1].split(' ')[0]
+        except:
+            raise RuntimeError('Не приемам промяна ' + key)
+            raise
         print('key', key)
         # TODO inspect user is allowed to change files https://stackoverflow.com/questions/424071/how-do-i-list-all-of-the-files-in-a-commit to see changes and git show REVISION:/path/to/file to show actual file

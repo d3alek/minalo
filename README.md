@@ -54,6 +54,8 @@ python rforward.py 3.122.41.243 -r localhost -p 10022 -u ubuntu
 ## Git настройки
 ```
 git config core.quotepath off
+git config commit.gpgsign true
+git config user.signingkey <key>
 ```
 
 ```
