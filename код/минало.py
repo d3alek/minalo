@@ -355,8 +355,8 @@ def минути(username, host, port):
     приготви()
 
     glog.debug(git.checkout('main'))
-    #log.info('Взимаме от origin')
-    #glog.debug(git.pull('--ff-only', 'origin'))
+    log.info('Взимаме от origin')
+    glog.debug(git.pull('--ff-only', 'origin'))
 
     if not os.path.exists(водач_папка):
         log.info('Правя гол водач с който ще общуват съучастниците')
