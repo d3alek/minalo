@@ -72,7 +72,7 @@ def to_state(new_state):
         pass
     else:
         late = s - state.value
-        log.warning("Закъсняваме с %d секунди във състояние %s" % (late, state))
+        log.warning("Закъснявам с %d секунди във състояние %s" % (late, state))
 
     log.info('%s -> %s' % (state, new_state))
     state = new_state
@@ -304,9 +304,6 @@ def гласувай(minute_branch, aз):
 def приеми_минута(minute_branch):
     log.info('Приемам минута')
 
-    best = None
-    best_count = None
-
     for f in get_fellows():
         try:
             glog.debug(git.fetch(f['id'], minute_branch))
@@ -319,18 +316,31 @@ def приеми_минута(minute_branch):
             else:
                 log.error(e)
 
-    клони = вземи_клони(шаблон=minute_branch, local=False)
+    branches = вземи_клони(шаблон=minute_branch, local=False)
 
-    for клон in клони:
-        count = int(git('rev-list', '--count', клон))
-        if not best or count > best_count:
-            best = клон
-            best_count = count
+    invalid = []
+    while True:
+        if len(invalid) == len(branches):
+            raise RuntimeError('Не успях да приема нито един клон - всички са невалидни') # TODO това не би трябвало да става
+        best = None
+        best_count = None
+        for branch in branches:
+            count = int(git('rev-list', '--count', branch))
+            if branch not in invalid and (not best or count > best_count):
+                best = branch
+                best_count = count
 
-    log.info('Приемам ' + best)
-    glog.debug(git.checkout('main'))
-    glog.debug(git.reset(best, '--hard'))
-    git.push(аз, 'main', '--force')
+        log.info('Приемам ' + best)
+        glog.debug(git.checkout('main'))
+        glog.debug(git.reset(best, '--hard'))
+        try:
+            glog.debug(git.push(аз, 'main', '--force'))
+
+            log.info('Успешно приех ' + best)
+            break
+        except:
+            log.warning('Не успях да приема %s, ще приема следващия най-добър' % best)
+            invalid.append(best)
 
 # План
 ## 0. Теглим main от някой от съучастниците които са на линия.
