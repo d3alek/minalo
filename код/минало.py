@@ -8,7 +8,7 @@ import os
 from помощни import State, calculate_minute_branch, сега, get_fellows, вземи_аз, get_head
 
 аз = вземи_аз()
-водач_папка = os.getcwd() + '/водач'
+bare_repo = os.getcwd() + '/водач'
 
 import colorlog
 import logging
@@ -169,7 +169,7 @@ def check_authorized_keys(minute_branch):
         glog.debug(rush(аз, minute_branch))
 
 def check_fellows(minute_branch, username, host, port):
-    водач_адрес = 'ssh://%s@%s:%s%s' % (username, host, port, водач_папка)
+    водач_адрес = 'ssh://%s@%s:%s%s' % (username, host, port, bare_repo)
 
     съучастници = get_fellows()
     намерих_себе_си = False
@@ -205,6 +205,8 @@ def check_fellows(minute_branch, username, host, port):
 
 def слушай_промени(minute_branch, username, host, port):
     log.info('Слушам и изпращам промени')
+
+    # Подготвям локален клон за минутата ако не съществува, ако съществува се rebase-вам върху него
     try:
         glog.debug(git.branch(minute_branch))
     except:
@@ -222,18 +224,7 @@ def слушай_промени(minute_branch, username, host, port):
 
     check_authorized_keys(minute_branch)
     check_fellows(minute_branch, username, host, port)
-
-    for f in get_fellows():
-        try:
-            pull = git.pull('--no-rebase', '--no-edit', f['id'], minute_branch) # TODO подписвай! ако има git setting за автоматично подписване, използвай го
-            log.info(pull)
-        except Exception as e:
-            if 'CONFLICT' in str(e):
-                log.error('Неразрешим конфликт при дърпането на %s от %s' % (minute_branch, f['id']))
-                log.error(e)
-                git.merge('--abort')
-            else:
-                log.error('Не успях да дръпна %s от %s' % (minute_branch, f['id']))
+    update_from_fellows()
 
 def сглоби_минута(minute_branch, аз):
     log.info('Сглобявам минута')
@@ -342,6 +333,35 @@ def приеми_минута(minute_branch):
             log.warning('Не успях да приема %s, ще приема следващия най-добър' % best)
             invalid.append(best)
 
+def update_from_fellows():
+    fellows = get_fellows()
+    remotes = list(map(str.strip, git.remote().split('\n')))
+    for fellow in fellows:
+        remote = fellow['remote']
+        if fellow['id'] == аз:
+            remote = bare_repo
+        if fellow['id'] not in remotes:
+            git.remote.add(fellow['id'], remote)
+        else:
+            git.remote('set-url', fellow['id'], remote)
+        try:
+            pull = git.pull('--no-rebase', '--no-edit', fellow['id'], minute_branch)
+            glog.debug(pull)
+            #if 'Fast-forward' in pull:
+            #    log.info('Изтеглих най-новото състояние от ' + fellow['id'])
+            #    if 'код/' in pull:
+            #        log.info('*'*3 + ' Промени в кода ' + '*'*3)
+            #        restart()
+            #else:
+            #    log.info('Не взимам нищо ново от ' + fellow['id'])
+        except Exception as e:
+            if 'CONFLICT' in str(e):
+                log.error('Неразрешим конфликт при дърпането на %s от %s' % (minute_branch, fellow['id']))
+                log.error(e)
+                git.merge('--abort')
+            else:
+                log.error('Не успях да дръпна %s от %s' % (minute_branch, f['id']))
+
 # План
 ## 0. Теглим main от някой от съучастниците които са на линия.
 ## 1. Всички промени се пращат към водачите до 30тата секунда от минутата във един и същ клон (зависещ от минутата). Този който е пратил промени следва да ги наблюдава - комита ако влезе в main, всичко точно, ако не, следва да се повтори следващата минута ( Водачите имат отговорност да синхронизират промените по между си.)
@@ -358,35 +378,13 @@ def минути(username, host, port):
     log.info('Взимаме от origin')
     glog.debug(git.pull('--ff-only', 'origin', 'сега'))
 
-    if not os.path.exists(водач_папка):
-        log.info('Правя гол водач с който ще общуват съучастниците')
-        glog.debug(git.clone('.git', водач_папка, '--bare'))
+    if not os.path.exists(bare_repo):
+        log.info('Правя голо репо с който ще общуват съучастниците')
+        glog.debug(git.clone('.git', bare_repo, '--bare'))
 
-    cp('код/pre-receive', водач_папка + '/hooks')
-    #TODO отдели
-    fellows = get_fellows()
-    remotes = list(map(str.strip, git.remote().split('\n')))
-    for fellow in fellows:
-        remote = fellow['remote']
-        if fellow['id'] == аз:
-            remote = водач_папка
-        if fellow['id'] not in remotes:
-            git.remote.add(fellow['id'], remote)
-        else:
-            git.remote('set-url', fellow['id'], remote)
-        try:
-            pull = git.pull('--ff-only', fellow['id'], 'сега')
-            glog.debug(pull)
-            if 'Fast-forward' in pull:
-                log.info('Изтеглих най-новото състояние от ' + fellow['id'])
-                if 'код/' in pull:
-                    log.info('*'*3 + ' Промени в кода ' + '*'*3)
-                    restart()
-            else:
-                log.info('Не взимам нищо ново от ' + fellow['id'])
-        except Exception as e:
-            log.debug('Не успях да се свържа с ' + fellow['id'])
-            continue
+    cp('код/pre-receive', bare_repo + '/hooks')
+
+    update_from_fellows()
 
     glog.debug(git.push(аз, 'сега', '--force'))
 
