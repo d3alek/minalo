@@ -333,7 +333,7 @@ def приеми_минута(minute_branch):
             log.warning('Не успях да приема %s, ще приема следващия най-добър' % best)
             invalid.append(best)
 
-def update_from_fellows():
+def update_from_fellows(minute_branch):
     fellows = get_fellows()
     remotes = list(map(str.strip, git.remote().split('\n')))
     for fellow in fellows:
@@ -383,8 +383,6 @@ def минути(username, host, port):
         glog.debug(git.clone('.git', bare_repo, '--bare'))
 
     cp('код/pre-receive', bare_repo + '/hooks')
-
-    update_from_fellows()
 
     glog.debug(git.push(аз, 'сега', '--force'))
 
@@ -523,13 +521,13 @@ if __name__ == '__main__':
         relays = []
         remote_port = None
         for съучастник in get_fellows():
-            nlog.debug('Пробвам %s за реле' % съучастник)
+            nlog.info('Пробвам %s за реле' % съучастник)
             username, server, port = network.раздели_адрес(съучастник['remote'])
 
             if съучастник['id'] == аз:
                 remote_port = port
             if port >= relay_ports_range[0] and port <= relay_ports_range[1]:
-                nlog.debug('Не става за реле - вече е зад тунел')
+                nlog.info('Не става за реле - вече е зад тунел')
             else:
                 relays.append((username, server, port))
 
@@ -539,7 +537,7 @@ if __name__ == '__main__':
         #network_status.update(state='Свързвам се с реле ' + server)
         username, server, port = relays[0] #TODO random or iterate over all
 
-        nlog.debug("Connecting to ssh host %s@%s:%d ..." % (username, server, port))
+        nlog.info("Connecting to ssh host %s@%s:%d ..." % (username, server, port))
         try:
             client.connect(
                 server,
