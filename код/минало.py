@@ -360,7 +360,7 @@ def update_from_fellows(minute_branch):
                 log.error(e)
                 git.merge('--abort')
             else:
-                log.error('Не успях да дръпна %s от %s' % (minute_branch, f['id']))
+                log.error('Не успях да дръпна %s от %s' % (minute_branch, fellow['id']))
 
 # План
 ## 0. Теглим main от някой от съучастниците които са на линия.
