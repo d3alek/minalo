@@ -375,8 +375,8 @@ def минути(username, host, port):
     приготви()
 
     glog.debug(git.checkout('сега'))
-    log.info('Взимаме от origin')
-    glog.debug(git.pull('--ff-only', 'origin', 'сега'))
+    #log.info('Взимаме от origin')
+    #glog.debug(git.pull('--ff-only', 'origin', 'сега'))
 
     if not os.path.exists(bare_repo):
         log.info('Правя голо репо с който ще общуват съучастниците')
