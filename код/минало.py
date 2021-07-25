@@ -576,3 +576,4 @@ if __name__ == '__main__':
         минути(args.ssh_user, ssh_host, ssh_port)
     finally:
         manager.stop()
+        client.close()
