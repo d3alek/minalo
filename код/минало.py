@@ -224,7 +224,7 @@ def слушай_промени(minute_branch, username, host, port):
 
     check_authorized_keys(minute_branch)
     check_fellows(minute_branch, username, host, port)
-    update_from_fellows()
+    update_from_fellows(minute_branch)
 
 def сглоби_минута(minute_branch, аз):
     log.info('Сглобявам минута')
